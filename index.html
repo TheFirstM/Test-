@@ -212,6 +212,13 @@
 </div>
 
 <script>
+// v4 — simple universal regex, no lookbehind, no \p{L}
+const VERSION = 'v4';
+document.addEventListener('DOMContentLoaded', () => {
+  const hdr = document.querySelector('header p');
+  if (hdr) hdr.textContent = 'Reduce Claude API costs through intelligent query optimization · ' + VERSION;
+});
+
 const MODELS = {
   opus:   { name: 'Claude Opus 4.8',   input: 5.00,  output: 25.00 },
   sonnet: { name: 'Claude Sonnet 4.6', input: 3.00,  output: 15.00 },
@@ -232,212 +239,253 @@ function formatCost(dollars) {
 }
 
 // -----------------------------------------------------------------------
-// Optimization rules — English
+// Optimization helpers — simple, universal, no lookbehind, no \p{L}
 // -----------------------------------------------------------------------
-const FILLER_WORDS_EN = [
-  /\b(please|kindly|would you|could you please|can you please|i would like you to|i want you to|i need you to|feel free to|do not hesitate to|go ahead and|make sure to|be sure to)\b/gi,
-  /\b(just|simply|basically|essentially|actually|really|very|quite|rather|somewhat|fairly|pretty much)\b/gi,
-];
 
-const VERBOSE_PHRASES_EN = {
-  light: [
-    [/\bin order to\b/gi, 'to'],
-    [/\bdue to the fact that\b/gi, 'because'],
-    [/\bat this point in time\b/gi, 'now'],
-    [/\bin the event that\b/gi, 'if'],
-    [/\bfor the purpose of\b/gi, 'for'],
-    [/\bwith regard to\b/gi, 'regarding'],
-    [/\bwith respect to\b/gi, 'for'],
-    [/\ba large number of\b/gi, 'many'],
-    [/\ba small number of\b/gi, 'few'],
-    [/\bmake use of\b/gi, 'use'],
-    [/\btake into account\b/gi, 'consider'],
-  ],
-  medium: [
-    [/\bI would really appreciate if you could\b/gi, ''],
-    [/\bI would appreciate it if you could\b/gi, ''],
-    [/\bI am writing to ask\b/gi, ''],
-    [/\bI was wondering if\b/gi, ''],
-    [/\bI was hoping you could\b/gi, ''],
-    [/\bCould you provide me with\b/gi, 'Provide'],
-    [/\bCan you give me\b/gi, 'Give me'],
-    [/\bhelp me understand how (I might be able to|I can|to)\b/gi, 'explain how to'],
-    [/\bprovide a detailed explanation with examples\b/gi, 'explain with examples'],
-    [/\bprovide me with a detailed\b/gi, 'provide a detailed'],
-    [/\bthat would be\b/gi, ''],
-    [/\bwould be great\b/gi, ''],
-    [/\bI think\b/gi, ''],
-    [/\bI believe\b/gi, ''],
-    [/\bAs you may know,?\s*/gi, ''],
-    [/\bAs we all know,?\s*/gi, ''],
-  ],
-  aggressive: [
-    [/\bWrite me\b/gi, 'Write'],
-    [/\bCan you write\b/gi, 'Write'],
-    [/\bPlease write\b/gi, 'Write'],
-    [/\bExplain to me\b/gi, 'Explain'],
-    [/\bTell me\b/gi, ''],
-    [/\bGive me\b/gi, ''],
-    [/\bShow me\b/gi, 'Show'],
-    [/\bI need\b/gi, ''],
-    [/\bI want\b/gi, ''],
-    [/\bfunction that would\b/gi, 'function that'],
-    [/\bfunction that will\b/gi, 'function to'],
-    [/\bcode that would\b/gi, 'code to'],
-    [/\bcode that will\b/gi, 'code to'],
-    [/\b(a given|a specific)\b/gi, 'a'],
-    [/\bstep[- ]by[- ]step\b/gi, 'step-by-step'],
-    [/\bin Python programming language\b/gi, 'in Python'],
-    [/\busing the Python programming language\b/gi, 'in Python'],
-  ],
-};
+// Replace a multi-word phrase anywhere in text (case-insensitive)
+function rp(text, from, to) {
+  const esc = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(esc, 'gi'), to);
+}
+
+// Replace a single word — boundary using \b (works for ASCII-ending words)
+function rw(text, word, to) {
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp('\\b' + esc + '\\b', 'gi'), to);
+}
+
+// Replace a word that ends with a Polish diacritic (can't use \b after)
+// Matches when preceded by space/start and followed by space/punctuation/end
+function rd(text, word, to) {
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Leading boundary: start of string or whitespace
+  // Trailing boundary: whitespace, punctuation, or end of string
+  return text.replace(new RegExp('(^|\\s)' + esc + '(?=[\\s,.:;!?]|$)', 'gi'),
+    (_, pre) => to ? pre + to : pre);
+}
 
 // -----------------------------------------------------------------------
-// Optimization rules — Polish
-// NOTE: uses (?<!\p{L}) / (?!\p{L}) with /u flag instead of \b
-//       because JS \b doesn't recognise Polish diacritics as word chars
+// English rules
 // -----------------------------------------------------------------------
-const PL = String.raw; // helper to write raw regex strings
-const plw = (pat, flags = 'giu') => new RegExp(pat, flags); // PL Unicode word-boundary regex builder
+function applyEnglish(t, level) {
+  // Light
+  t = rp(t, 'in order to', 'to');
+  t = rp(t, 'due to the fact that', 'because');
+  t = rp(t, 'at this point in time', 'now');
+  t = rp(t, 'in the event that', 'if');
+  t = rp(t, 'for the purpose of', 'for');
+  t = rp(t, 'with regard to', 'regarding');
+  t = rp(t, 'with respect to', 'for');
+  t = rp(t, 'a large number of', 'many');
+  t = rp(t, 'a small number of', 'few');
+  t = rp(t, 'make use of', 'use');
+  t = rp(t, 'take into account', 'consider');
 
-const FILLER_WORDS_PL = [
-  // polite padding
-  plw(String.raw`(?<!\p{L})(proszę),?\s+(?=\p{L})`),
-  plw(String.raw`(?<!\p{L})(czy\s+(możesz|mógłbyś|mógłbyś\s+mi|możesz\s+mi|mogłabyś|mogłabyś\s+mi))(?!\p{L})`),
-  plw(String.raw`(?<!\p{L})(chciał(?:bym|abym)),?\s+(?:żebyś|abyś)\s+`),
-  plw(String.raw`(?<!\p{L})(chciał(?:bym|abym))(?!\p{L})`),
-  plw(String.raw`(?<!\p{L})(potrzebuję|potrzebowałbym|potrzebowałabym)(?!\p{L})`),
-  plw(String.raw`(?<!\p{L})(powiedz\s+mi|napisz\s+mi|wyjaśnij\s+mi|pokaż\s+mi|pomóż\s+mi)(?!\p{L})`),
-  // filler adverbs
-  plw(String.raw`(?<!\p{L})(po\s+prostu|zasadniczo|właściwie|generalnie|w\s+zasadzie|tak\s+naprawdę|naprawdę|dosyć|dość|raczej|całkiem|nieco|trochę|jakby)(?!\p{L})`),
-];
+  if (level === 'medium' || level === 'aggressive') {
+    t = rp(t, 'I would really appreciate if you could', '');
+    t = rp(t, 'I would appreciate it if you could', '');
+    t = rp(t, 'I am writing to ask', '');
+    t = rp(t, 'I was wondering if', '');
+    t = rp(t, 'I was hoping you could', '');
+    t = rp(t, 'Could you provide me with', 'Provide');
+    t = rp(t, 'Can you give me', 'Give me');
+    t = rp(t, 'provide a detailed explanation with examples', 'explain with examples');
+    t = rp(t, 'provide me with a detailed', 'provide a detailed');
+    t = rp(t, 'help me understand how I might be able to', 'explain how to');
+    t = rp(t, 'help me understand how I can', 'explain how to');
+    t = rp(t, 'help me understand how to', 'explain how to');
+    t = rw(t, 'that would be', '');
+    t = rw(t, 'would be great', '');
+    t = rw(t, 'I think', '');
+    t = rw(t, 'I believe', '');
+    t = rw(t, 'please', '');
+    t = rw(t, 'kindly', '');
+    t = rw(t, 'just', '');
+    t = rw(t, 'simply', '');
+    t = rw(t, 'basically', '');
+    t = rw(t, 'essentially', '');
+    t = rw(t, 'actually', '');
+    t = rw(t, 'really', '');
+  }
 
-const VERBOSE_PHRASES_PL = {
-  light: [
-    [plw(String.raw`(?<!\p{L})na\s+temat(?!\p{L})`), 'o'],           // -7 chars
-    [plw(String.raw`(?<!\p{L})w\s+celu(?!\p{L})`), 'aby'],            // -3 chars
-    [plw(String.raw`(?<!\p{L})ze\s+wzgl[eę]du\s+na\s+to,?\s+że(?!\p{L})`), 'bo'],    // -18 chars
-    [plw(String.raw`(?<!\p{L})ze\s+wzgl[eę]du\s+na\s+fakt,?\s+że(?!\p{L})`), 'ponieważ'], // -14 chars
-    [plw(String.raw`(?<!\p{L})w\s+chwili\s+obecnej(?!\p{L})`), 'teraz'],  // -11 chars
-    [plw(String.raw`(?<!\p{L})w\s+przypadku\s+gdy(?!\p{L})`), 'jeśli'],   // -10 chars
-    [plw(String.raw`(?<!\p{L})na\s+potrzeby(?!\p{L})`), 'dla'],            // -5 chars
-    [plw(String.raw`(?<!\p{L})du[zż]a\s+liczba(?!\p{L})`), 'wiele'],       // -5 chars
-    [plw(String.raw`(?<!\p{L})ma[łl]a\s+liczba(?!\p{L})`), 'kilka'],       // -5 chars
-    [plw(String.raw`(?<!\p{L})w\s+zwi[aą]zku\s+z\s+tym(?!\p{L})`), 'dlatego'],        // -8 chars
-    [plw(String.raw`(?<!\p{L})w\s+zwi[aą]zku\s+z\s+powy[zż]szym(?!\p{L})`), 'dlatego'], // -14 chars
-    [plw(String.raw`(?<!\p{L})na\s+podstawie\s+powy[zż]szego(?!\p{L})`), ''],           // -22 chars
-    [plw(String.raw`(?<!\p{L})wzi[aą][cć]\s+pod\s+uwag[eę](?!\p{L})`), 'uwzględnić'],  // -5 chars
-  ],
-  medium: [
-    // FIX: wszelkie → '' (remove, -9 chars) — NOT →wszystkie which was LONGER
-    [plw(String.raw`(?<!\p{L})wszelkie\s*`), ''],                           // -9 chars
-    // FIX: pod kątem → 'o' (-8 chars) — NOT →'w zakresie' which was LONGER
-    [plw(String.raw`(?<!\p{L})pod\s+k[aą]tem(?!\p{L})`), 'o'],             // -8 chars
-    // FIX: dodatkowo → '' (remove, -9 chars) — NOT →'i' which left orphan 'i i'
-    [plw(String.raw`(?<!\p{L})dodatkowo(?!\p{L})`), ''],                    // -9 chars
-    [plw(String.raw`(?<!\p{L})obok\s+siebie(?!\p{L})`), 'obok'],            // -6 chars
-    [plw(String.raw`(?<!\p{L})a\s+tak[zż]e(?!\p{L})`), 'i'],               // -5 chars
-    [plw(String.raw`(?<!\p{L})oraz(?!\p{L})`), 'i'],                        // -3 chars
-    [plw(String.raw`(?<!\p{L})jednak[zż]e(?!\p{L})`), 'ale'],               // -5 chars
-    [plw(String.raw`(?<!\p{L})jednak(?!\p{L})`), 'ale'],                    // -3 chars
-    [plw(String.raw`(?<!\p{L})natomiast(?!\p{L})`), 'a'],                   // -8 chars
-    [plw(String.raw`(?<!\p{L})moim\s+zdaniem(?!\p{L})`), ''],               // -12 chars
-    [plw(String.raw`(?<!\p{L})uwa[zż]am,?\s+[zż]e(?!\p{L})`), ''],         // -10 chars
-    [plw(String.raw`(?<!\p{L})s[aą]dz[eę],?\s+[zż]e(?!\p{L})`), ''],       // -10 chars
-    [plw(String.raw`(?<!\p{L})wydaje\s+mi\s+si[eę],?\s+[zż]e(?!\p{L})`), ''], // -18 chars
-    [plw(String.raw`(?<!\p{L})jak\s+wiadomo,?\s*`), ''],                    // -12 chars
-    [plw(String.raw`(?<!\p{L})jak\s+wszyscy\s+wiedz[aą],?\s*`), ''],        // -20 chars
-    [plw(String.raw`(?<!\p{L})warto\s+zaznaczy[cć],?\s+[zż]e(?!\p{L})`), ''],  // -20 chars
-    [plw(String.raw`(?<!\p{L})warto\s+wspomnie[cć],?\s+[zż]e(?!\p{L})`), ''],  // -20 chars
-    [plw(String.raw`(?<!\p{L})pragnę\s+zaznaczy[cć],?\s+[zż]e(?!\p{L})`), ''], // -22 chars
-    [plw(String.raw`(?<!\p{L})[sś]ci[aą]gnij\s+(wszelkie|wszystkie)\s+dane(?!\p{L})`), 'Podaj dane'], // compress
-    [plw(String.raw`(?<!\p{L})zbierz\s+(wszelkie|wszystkie)\s+informacje(?!\p{L})`), 'Podaj informacje'], // compress
-  ],
-  aggressive: [
-    [plw(String.raw`(?<!\p{L})na\s+przyk[łl]ad(?!\p{L})`), 'np.'],         // -8 chars
-    [plw(String.raw`(?<!\p{L})to\s+jest(?!\p{L})`), 'tj.'],                 // -4 chars
-    [plw(String.raw`(?<!\p{L})to\s+znaczy(?!\p{L})`), 'tj.'],               // -6 chars
-    [plw(String.raw`(?<!\p{L})i\s+tak\s+dalej(?!\p{L})`), 'itd.'],          // -7 chars
-    [plw(String.raw`(?<!\p{L})i\s+tym\s+podobne(?!\p{L})`), 'itp.'],        // -9 chars
-    [plw(String.raw`(?<!\p{L})przy\s+u[zż]yciu(?!\p{L})`), 'przez'],        // -6 chars
-    [plw(String.raw`(?<!\p{L})za\s+pomoc[aą](?!\p{L})`), 'przez'],          // -4 chars
-    [plw(String.raw`(?<!\p{L})w\s+oparciu\s+o(?!\p{L})`), 'na podstawie'],  // -1 char (structural)
-    [plw(String.raw`(?<!\p{L})w\s+przeci[aą]gu(?!\p{L})`), 'przez'],        // -5 chars
-    [plw(String.raw`(?<!\p{L})w\s+ci[aą]gu(?!\p{L})`), 'przez'],            // -3 chars
-  ],
-};
+  if (level === 'aggressive') {
+    t = rp(t, 'Write me', 'Write');
+    t = rp(t, 'Can you write', 'Write');
+    t = rp(t, 'Please write', 'Write');
+    t = rp(t, 'Explain to me', 'Explain');
+    t = rw(t, 'Tell me', '');
+    t = rw(t, 'Give me', '');
+    t = rw(t, 'I need', '');
+    t = rw(t, 'I want', '');
+    t = rp(t, 'in Python programming language', 'in Python');
+    t = rp(t, 'using the Python programming language', 'in Python');
+    t = rp(t, 'function that would', 'function that');
+    t = rp(t, 'function that will', 'function to');
+    t = rp(t, 'code that would', 'code to');
+    t = rp(t, 'code that will', 'code to');
+    t = rp(t, 'for example', 'e.g.');
+    t = rp(t, 'that is to say', 'i.e.');
+    t = rp(t, 'and so on', 'etc.');
+    t = rp(t, 'and so forth', 'etc.');
+  }
+  return t;
+}
+
+// -----------------------------------------------------------------------
+// Polish rules
+// -----------------------------------------------------------------------
+function applyPolish(t, level) {
+  // Light — always applied
+  t = rp(t, 'na temat', 'o');
+  t = rp(t, 'w celu', 'aby');
+  t = rp(t, 'ze względu na fakt, że', 'ponieważ');
+  t = rp(t, 'ze wzgledu na fakt, ze', 'ponieważ');
+  t = rp(t, 'ze względu na to, że', 'bo');
+  t = rp(t, 'ze wzgledu na to, ze', 'bo');
+  t = rp(t, 'w chwili obecnej', 'teraz');
+  t = rp(t, 'w przypadku gdy', 'jeśli');
+  t = rp(t, 'w związku z powyższym', 'dlatego');
+  t = rp(t, 'w zwiazku z powyzszym', 'dlatego');
+  t = rp(t, 'w związku z tym', 'dlatego');
+  t = rp(t, 'w zwiazku z tym', 'dlatego');
+  t = rp(t, 'na potrzeby', 'dla');
+  t = rp(t, 'duża liczba', 'wiele');
+  t = rp(t, 'mała liczba', 'kilka');
+  t = rp(t, 'wziąć pod uwagę', 'uwzględnić');
+  t = rp(t, 'wziac pod uwage', 'uwzglednic');
+
+  if (level === 'medium' || level === 'aggressive') {
+    // Courtesy phrases — use rd() for words ending in diacritic
+    t = rd(t, 'proszę', '');
+    t = rd(t, 'prosze', '');
+    t = rp(t, 'powiedz mi', '');
+    t = rp(t, 'napisz mi', '');
+    t = rp(t, 'wyjaśnij mi', 'wyjaśnij');
+    t = rp(t, 'wyjasniej mi', 'wyjasniej');
+    t = rp(t, 'pokaż mi', 'pokaż');
+    t = rp(t, 'pokaz mi', 'pokaz');
+    t = rp(t, 'pomóż mi', 'pomóż');
+    t = rp(t, 'pomoz mi', 'pomoz');
+    t = rp(t, 'czy możesz', '');
+    t = rp(t, 'czy mozesz', '');
+    t = rp(t, 'czy mógłbyś', '');
+    t = rp(t, 'czy moglbys', '');
+    t = rp(t, 'chciałbym żebyś', '');
+    t = rp(t, 'chciałabym żebyś', '');
+    t = rp(t, 'chcialbym zebys', '');
+    t = rw(t, 'chciałbym', '');
+    t = rw(t, 'chciałabym', '');
+    t = rw(t, 'potrzebuję', '');
+
+    // Filler adverbs — use rd() for diacritic endings
+    t = rd(t, 'naprawdę', '');
+    t = rd(t, 'naprawde', '');
+    t = rd(t, 'dosyć', '');
+    t = rd(t, 'dosyc', '');
+    t = rp(t, 'po prostu', '');
+    t = rw(t, 'zasadniczo', '');
+    t = rw(t, 'generalnie', '');
+    t = rp(t, 'tak naprawdę', '');
+    t = rp(t, 'tak naprawde', '');
+    t = rp(t, 'w zasadzie', '');
+    t = rw(t, 'całkiem', '');
+    t = rw(t, 'raczej', '');
+    t = rw(t, 'nieco', '');
+    t = rw(t, 'trochę', '');
+
+    // Phrase compression (key savings)
+    t = rp(t, 'wszelkie', '');       // -8 chars (NOT →wszystkie!)
+    t = rp(t, 'pod kątem', 'o');     // -8 chars (NOT →w zakresie!)
+    t = rp(t, 'pod katem', 'o');
+    t = rp(t, 'obok siebie', 'obok'); // -6 chars
+    t = rp(t, 'dodatkowo', '');       // -9 chars
+    t = rp(t, 'a także', 'i');
+    t = rp(t, 'a takze', 'i');
+    t = rw(t, 'oraz', 'i');
+    t = rw(t, 'jednakże', 'ale');
+    t = rw(t, 'jednak', 'ale');
+    t = rw(t, 'natomiast', 'a');
+    t = rp(t, 'moim zdaniem', '');
+    t = rp(t, 'warto zaznaczyć, że', '');
+    t = rp(t, 'warto wspomnieć, że', '');
+    t = rp(t, 'jak wiadomo', '');
+    t = rp(t, 'jak wszyscy wiedzą', '');
+
+    // Greeting removal
+    t = t.replace(/^(cześć[!,.]?\s*|witaj[!,.]?\s*|hej[!,.]?\s*|dzień dobry[!,.]?\s*)/i, '');
+  }
+
+  if (level === 'aggressive') {
+    t = rp(t, 'na przykład', 'np.');
+    t = rp(t, 'to jest', 'tj.');
+    t = rp(t, 'to znaczy', 'tj.');
+    t = rp(t, 'i tak dalej', 'itd.');
+    t = rp(t, 'i tym podobne', 'itp.');
+    t = rp(t, 'przy użyciu', 'przez');
+    t = rp(t, 'za pomocą', 'przez');
+    t = rp(t, 'w przeciągu', 'przez');
+    t = rp(t, 'w ciągu', 'przez');
+  }
+  return t;
+}
 
 function applyOptimizations(text, level) {
   const applied = new Set();
   let t = text;
 
-  // Whitespace normalization (always)
-  const wsBefore = t;
+  const before0 = t;
   t = t.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-  if (t !== wsBefore) applied.add('whitespace');
+  if (t !== before0) applied.add('whitespace');
 
-  // Light verbose phrases — both languages, always applied
-  [...VERBOSE_PHRASES_EN.light, ...VERBOSE_PHRASES_PL.light].forEach(([re, rep]) => {
-    const n = t.replace(re, rep);
-    if (n !== t) { applied.add('verbose'); t = n; }
-  });
+  // English light always
+  const before1 = t;
+  t = applyEnglish(t, 'light');
+  if (t !== before1) applied.add('verbose');
+
+  // Polish light always
+  const before2 = t;
+  t = applyPolish(t, 'light');
+  if (t !== before2) applied.add('verbose');
 
   if (level === 'medium' || level === 'aggressive') {
-    // Filler words — EN + PL
-    [...FILLER_WORDS_EN, ...FILLER_WORDS_PL].forEach(re => {
-      const n = t.replace(re, '');
-      if (n !== t) { applied.add('filler'); t = n; }
-    });
+    const before3 = t;
+    t = applyEnglish(t, level);
+    t = applyPolish(t, level);
+    if (t !== before3) applied.add('filler');
+  }
 
-    // Medium verbose — EN + PL
-    [...VERBOSE_PHRASES_EN.medium, ...VERBOSE_PHRASES_PL.medium].forEach(([re, rep]) => {
-      const n = t.replace(re, rep);
-      if (n !== t) { applied.add('verbose'); t = n; }
-    });
+  if (level === 'aggressive') {
+    const before4 = t;
+    t = applyEnglish(t, 'aggressive');
+    t = applyPolish(t, 'aggressive');
+    if (t !== before4) applied.add('compress');
+  }
 
-    // Polite greeting — EN + PL
-    const politeRe = /^(hello[!,.]?\s*|hi[!,.]?\s*|good (morning|afternoon|evening)[!,.]?\s*|dear (claude|assistant)[!,.]?\s*|dzień dobry[!,.]?\s*|cześć[!,.]?\s*|witaj[!,.]?\s*|hej[!,.]?\s*|drogi (claude|asystencie)[!,.]?\s*)/i;
+  // Post-processing cleanup
+  t = t.replace(/[ \t]+/g, ' ');
+  t = t.replace(/\s+([,.!?:;])/g, '$1');
+  t = t.replace(/,\s*,/g, ',');
+  t = t.replace(/\bi\s+i\b/gi, 'i');
+  t = t.replace(/\ba\s+a\b/gi, 'a');
+  t = t.replace(/\bale\s+ale\b/gi, 'ale');
+  t = t.replace(/,\s+i\s+i\s+/gi, ', ');
+  t = t.replace(/\s+$/gm, '').trim();
+
+  // EN polite greeting
+  if (level === 'medium' || level === 'aggressive') {
+    const politeRe = /^(hello[!,.]?\s*|hi[!,.]?\s*|good (morning|afternoon|evening)[!,.]?\s*|dear (claude|assistant)[!,.]?\s*)/i;
     const n2 = t.replace(politeRe, '');
     if (n2 !== t) { applied.add('polite'); t = n2; }
   }
 
   if (level === 'aggressive') {
-    // Aggressive verbose — EN + PL
-    [...VERBOSE_PHRASES_EN.aggressive, ...VERBOSE_PHRASES_PL.aggressive].forEach(([re, rep]) => {
-      const n = t.replace(re, rep);
-      if (n !== t) { applied.add('compress'); t = n; }
-    });
-
-    // Redundant AI disclaimers — EN + PL
-    const redRe = /\b(as an? (AI|artificial intelligence|language model|chatbot),?\s*|jako (AI|model językowy|asystent AI),?\s*)/gi;
+    const redRe = /\b(as an? (AI|artificial intelligence|language model|chatbot),?\s*)\b/gi;
     const n3 = t.replace(redRe, '');
     if (n3 !== t) { applied.add('redundant'); t = n3; }
-
-    // Abbreviate — EN
-    const abbrevEN = [
-      [/\bfor example\b/gi, 'e.g.'],
-      [/\bthat is to say\b/gi, 'i.e.'],
-      [/\band so on\b/gi, 'etc.'],
-      [/\band so forth\b/gi, 'etc.'],
-      [/\bet cetera\b/gi, 'etc.'],
-    ];
-    abbrevEN.forEach(([re, rep]) => {
-      const n = t.replace(re, rep);
-      if (n !== t) { applied.add('abbreviate'); t = n; }
-    });
   }
 
-  // Final cleanup
-  t = t.replace(/\s{2,}/g, ' ');                     // collapse multiple spaces
-  t = t.replace(/\s+([,.!?:;])/g, '$1');             // orphan punctuation
-  t = t.replace(/,\s*,/g, ',');                      // double comma
-  t = t.replace(/(?<!\p{L})(i)\s+\1(?!\p{L})/giu, '$1'); // "i i" → "i"
-  t = t.replace(/(?<!\p{L})(a)\s+\1(?!\p{L})/giu, '$1'); // "a a" → "a"
-  t = t.replace(/(?<!\p{L})(ale)\s+\1(?!\p{L})/giu, '$1'); // "ale ale" → "ale"
-  t = t.replace(/,\s+i\s+i\s+/gi, ', ');             // ", i i " → ", "
-  t = t.replace(/\s+$/gm, '').trim();
-
-  // Capitalize first character
+  // Final cleanup + capitalize
+  t = t.replace(/[ \t]+/g, ' ').trim();
   if (t.length > 0) {
     applied.add('structure');
     t = t.charAt(0).toUpperCase() + t.slice(1);
