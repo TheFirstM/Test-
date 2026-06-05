@@ -232,14 +232,14 @@ function formatCost(dollars) {
 }
 
 // -----------------------------------------------------------------------
-// Optimization rules
+// Optimization rules — English
 // -----------------------------------------------------------------------
-const FILLER_WORDS = [
+const FILLER_WORDS_EN = [
   /\b(please|kindly|would you|could you please|can you please|i would like you to|i want you to|i need you to|feel free to|do not hesitate to|go ahead and|make sure to|be sure to)\b/gi,
   /\b(just|simply|basically|essentially|actually|really|very|quite|rather|somewhat|fairly|pretty much)\b/gi,
 ];
 
-const VERBOSE_PHRASES = {
+const VERBOSE_PHRASES_EN = {
   light: [
     [/\bin order to\b/gi, 'to'],
     [/\bdue to the fact that\b/gi, 'because'],
@@ -292,70 +292,146 @@ const VERBOSE_PHRASES = {
   ],
 };
 
+// -----------------------------------------------------------------------
+// Optimization rules — Polish
+// -----------------------------------------------------------------------
+const FILLER_WORDS_PL = [
+  // grzecznościowe
+  /\b(proszę,?\s+)(?=[a-ząćęłńóśźż])/gi,
+  /\b(czy (możesz|mógłbyś|mógłbyś mi|możesz mi|mogłabyś|mogłabyś mi))\b/gi,
+  /\b(chciałbym,?\s+żebyś|chciałabym,?\s+żebyś|chciałbym,?\s+abyś|chciałabym,?\s+abyś)\b/gi,
+  /\b(chciałbym|chciałabym)\b/gi,
+  /\b(potrzebuję|potrzebowałbym|potrzebowałabym)\b/gi,
+  /\b(powiedz mi|napisz mi|wyjaśnij mi|pokaż mi|pomóż mi)\b/gi,
+  // wypełniacze
+  /\b(po prostu|zasadniczo|właściwie|generalnie|w zasadzie|tak naprawdę|naprawdę|dosyć|dość|raczej|całkiem|nieco|trochę|jakby)\b/gi,
+];
+
+const VERBOSE_PHRASES_PL = {
+  light: [
+    [/\bna temat\b/gi, 'o'],
+    [/\bw celu\b/gi, 'aby'],
+    [/\bze względu na to,?\s+że\b/gi, 'bo'],
+    [/\bze względu na fakt,?\s+że\b/gi, 'ponieważ'],
+    [/\bw chwili obecnej\b/gi, 'teraz'],
+    [/\bw przypadku gdy\b/gi, 'jeśli'],
+    [/\bna potrzeby\b/gi, 'dla'],
+    [/\bw zakresie\b/gi, 'o'],
+    [/\bduża liczba\b/gi, 'wiele'],
+    [/\bmała liczba\b/gi, 'kilka'],
+    [/\bkorzystać z\b/gi, 'użyć'],
+    [/\bwziąć pod uwagę\b/gi, 'uwzględnić'],
+    [/\bprzed chwilą\b/gi, 'właśnie'],
+    [/\bw związku z tym\b/gi, 'dlatego'],
+    [/\bw związku z powyższym\b/gi, 'dlatego'],
+    [/\bna podstawie powyższego\b/gi, ''],
+  ],
+  medium: [
+    [/\bwszelkie\b/gi, 'wszystkie'],
+    [/\bpod kątem\b/gi, 'w zakresie'],
+    [/\bdodatkowo\b/gi, 'i'],
+    [/\ba także\b/gi, 'i'],
+    [/\boraz\b/gi, 'i'],
+    [/\bjednakże\b/gi, 'ale'],
+    [/\bjednak\b/gi, 'ale'],
+    [/\bnatomiast\b/gi, 'a'],
+    [/\bmoim zdaniem\b/gi, ''],
+    [/\buważam,?\s+że\b/gi, ''],
+    [/\bsądzę,?\s+że\b/gi, ''],
+    [/\bwydaje mi się,?\s+że\b/gi, ''],
+    [/\bjak wiadomo,?\s*/gi, ''],
+    [/\bjak wszyscy wiedzą,?\s*/gi, ''],
+    [/\bchciałbym zaznaczyć,?\s+że\b/gi, ''],
+    [/\bwarto zaznaczyć,?\s+że\b/gi, ''],
+    [/\bwarto wspomnieć,?\s+że\b/gi, ''],
+    [/\bpragnę zaznaczyć,?\s+że\b/gi, ''],
+    [/\bdobrze by było\b/gi, ''],
+    [/\bbardzo (mi|nam) zależy\b/gi, ''],
+    [/\bściągnij (wszelkie|wszystkie) dane\b/gi, 'podaj dane'],
+    [/\bzbierz (wszelkie|wszystkie) informacje\b/gi, 'podaj informacje'],
+    [/\bzebrać (wszelkie|wszystkie) informacje\b/gi, 'zebrać informacje'],
+  ],
+  aggressive: [
+    [/\bna przykład\b/gi, 'np.'],
+    [/\bto jest\b/gi, 'tj.'],
+    [/\bto znaczy\b/gi, 'tj.'],
+    [/\bi tak dalej\b/gi, 'itd.'],
+    [/\bi tym podobne\b/gi, 'itp.'],
+    [/\bprzy użyciu\b/gi, 'używając'],
+    [/\bza pomocą\b/gi, 'używając'],
+    [/\bw oparciu o\b/gi, 'na podstawie'],
+    [/\bna przestrzeni\b/gi, 'przez'],
+    [/\bw przeciągu\b/gi, 'przez'],
+    [/\bw ciągu\b/gi, 'przez'],
+    [/\bobok siebie\b/gi, 'obok'],
+    [/\bdla (każdego|każdej)\b/gi, 'na'],
+  ],
+};
+
 function applyOptimizations(text, level) {
   const applied = new Set();
   let t = text;
 
   // Whitespace normalization (always)
-  const before = t;
+  const wsBefore = t;
   t = t.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
-  if (t !== before) applied.add('whitespace');
+  if (t !== wsBefore) applied.add('whitespace');
 
-  // Verbose phrases — light level always applied
-  VERBOSE_PHRASES.light.forEach(([re, rep]) => {
+  // Light verbose phrases — both languages, always applied
+  [...VERBOSE_PHRASES_EN.light, ...VERBOSE_PHRASES_PL.light].forEach(([re, rep]) => {
     const n = t.replace(re, rep);
     if (n !== t) { applied.add('verbose'); t = n; }
   });
 
   if (level === 'medium' || level === 'aggressive') {
-    // Filler words
-    FILLER_WORDS.forEach(re => {
+    // Filler words — EN + PL
+    [...FILLER_WORDS_EN, ...FILLER_WORDS_PL].forEach(re => {
       const n = t.replace(re, '');
       if (n !== t) { applied.add('filler'); t = n; }
     });
 
-    // Medium verbose phrases
-    VERBOSE_PHRASES.medium.forEach(([re, rep]) => {
+    // Medium verbose — EN + PL
+    [...VERBOSE_PHRASES_EN.medium, ...VERBOSE_PHRASES_PL.medium].forEach(([re, rep]) => {
       const n = t.replace(re, rep);
       if (n !== t) { applied.add('verbose'); t = n; }
     });
 
-    // Polite padding
-    const politeRe = /^(hello[!,.]?\s*|hi[!,.]?\s*|good (morning|afternoon|evening)[!,.]?\s*|dear (claude|assistant)[!,.]?\s*)/i;
+    // Polite greeting — EN + PL
+    const politeRe = /^(hello[!,.]?\s*|hi[!,.]?\s*|good (morning|afternoon|evening)[!,.]?\s*|dear (claude|assistant)[!,.]?\s*|dzień dobry[!,.]?\s*|cześć[!,.]?\s*|witaj[!,.]?\s*|hej[!,.]?\s*|drogi (claude|asystencie)[!,.]?\s*)/i;
     const n2 = t.replace(politeRe, '');
     if (n2 !== t) { applied.add('polite'); t = n2; }
   }
 
   if (level === 'aggressive') {
-    // Aggressive verbose
-    VERBOSE_PHRASES.aggressive.forEach(([re, rep]) => {
+    // Aggressive verbose — EN + PL
+    [...VERBOSE_PHRASES_EN.aggressive, ...VERBOSE_PHRASES_PL.aggressive].forEach(([re, rep]) => {
       const n = t.replace(re, rep);
       if (n !== t) { applied.add('compress'); t = n; }
     });
 
-    // Redundant context: "As an AI language model..." type disclaimers or acknowledgements
-    const redRe = /\b(as an? (AI|artificial intelligence|language model|chatbot),?\s*)/gi;
+    // Redundant AI disclaimers — EN + PL
+    const redRe = /\b(as an? (AI|artificial intelligence|language model|chatbot),?\s*|jako (AI|model językowy|asystent AI),?\s*)/gi;
     const n3 = t.replace(redRe, '');
     if (n3 !== t) { applied.add('redundant'); t = n3; }
 
-    // Abbreviate common phrases
-    const abbrevMap = [
+    // Abbreviate — EN
+    const abbrevEN = [
       [/\bfor example\b/gi, 'e.g.'],
       [/\bthat is to say\b/gi, 'i.e.'],
       [/\band so on\b/gi, 'etc.'],
       [/\band so forth\b/gi, 'etc.'],
       [/\bet cetera\b/gi, 'etc.'],
     ];
-    abbrevMap.forEach(([re, rep]) => {
+    abbrevEN.forEach(([re, rep]) => {
       const n = t.replace(re, rep);
       if (n !== t) { applied.add('abbreviate'); t = n; }
     });
   }
 
-  // Final cleanup: multiple spaces, leading/trailing whitespace, orphaned punctuation
-  t = t.replace(/\s{2,}/g, ' ').replace(/\s+([,.!?])/g, '$1').replace(/\s+$/gm, '').trim();
+  // Final cleanup: collapse spaces, fix orphaned punctuation
+  t = t.replace(/\s{2,}/g, ' ').replace(/\s+([,.!?:;])/g, '$1').replace(/\s+$/gm, '').trim();
 
-  // Sentence structure: capitalize first letter after cleanup
+  // Capitalize first character
   if (t.length > 0) {
     applied.add('structure');
     t = t.charAt(0).toUpperCase() + t.slice(1);
