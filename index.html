@@ -82,6 +82,22 @@
   .empty-state { text-align: center; padding: 40px; color: #4a5568; }
   .empty-state svg { margin: 0 auto 12px; opacity: 0.4; }
   .empty-state p { font-size: 0.9rem; }
+
+  .cumulative-panel { background: linear-gradient(135deg, #1a2535, #1e1a35); border: 1px solid #3d4a5c; border-radius: 12px; padding: 18px; margin-bottom: 20px; }
+  .cumulative-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .cumulative-title { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .reset-btn { background: transparent; border: 1px solid #4a5568; color: #718096; padding: 4px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+  .reset-btn:hover { border-color: #fc8181; color: #fc8181; }
+  .cumulative-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 640px) { .cumulative-stats { grid-template-columns: repeat(2, 1fr); } }
+  .cum-stat { text-align: center; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 12px 8px; }
+  .cum-label { font-size: 0.68rem; color: #718096; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .cum-value { font-size: 1.3rem; font-weight: 700; }
+  .cum-sub { font-size: 0.7rem; color: #718096; margin-top: 3px; }
+  .cum-runs { color: #90cdf4; }
+  .cum-tokens { color: #68d391; }
+  .cum-cost { color: #f6e05e; }
+  .cum-pct { color: #b794f4; }
 </style>
 </head>
 <body>
@@ -195,6 +211,35 @@
     </div>
   </div>
 
+  <div class="cumulative-panel">
+    <div class="cumulative-header">
+      <span class="cumulative-title">📊 Łączne oszczędności sesji</span>
+      <button class="reset-btn" onclick="resetCumulative()">↺ Resetuj</button>
+    </div>
+    <div class="cumulative-stats">
+      <div class="cum-stat">
+        <div class="cum-label">Optymalizacje</div>
+        <div class="cum-value cum-runs" id="cumRuns">0</div>
+        <div class="cum-sub">uruchomień</div>
+      </div>
+      <div class="cum-stat">
+        <div class="cum-label">Tokeny łącznie</div>
+        <div class="cum-value cum-tokens" id="cumTokens">0</div>
+        <div class="cum-sub">zaoszczędzone</div>
+      </div>
+      <div class="cum-stat">
+        <div class="cum-label">Koszt (1k wywołań)</div>
+        <div class="cum-value cum-cost" id="cumCost">$0.00</div>
+        <div class="cum-sub">łącznie saved</div>
+      </div>
+      <div class="cum-stat">
+        <div class="cum-label">Śr. redukcja</div>
+        <div class="cum-value cum-pct" id="cumPct">0%</div>
+        <div class="cum-sub">tokenów / zapytanie</div>
+      </div>
+    </div>
+  </div>
+
   <div class="techniques-panel">
     <div class="techniques-title">Applied Optimizations</div>
     <div class="technique-tags" id="techniqueTags">
@@ -212,8 +257,8 @@
 </div>
 
 <script>
-// v6 — new patterns + auto-update banner
-const VERSION = 'v6';
+// v7 — cumulative savings counter
+const VERSION = 'v7';
 const RAW_URL = 'https://raw.githubusercontent.com/TheFirstM/Test-/claude/token-cost-optimization-GxPza/index.html';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -243,6 +288,37 @@ const MODELS = {
   sonnet: { name: 'Claude Sonnet 4.6', input: 3.00,  output: 15.00 },
   haiku:  { name: 'Claude Haiku 4.5',  input: 1.00,  output: 5.00  },
 };
+
+// -----------------------------------------------------------------------
+// Cumulative savings counter
+// -----------------------------------------------------------------------
+let cumulative = { runs: 0, tokensSaved: 0, costSaved: 0, totalOrigTokens: 0 };
+
+function addCumulativeSaving(savedTokens, savedCostPer1k) {
+  if (savedTokens <= 0) return;
+  cumulative.runs++;
+  cumulative.tokensSaved += savedTokens;
+  cumulative.costSaved += savedCostPer1k;
+  cumulative.totalOrigTokens += estimateTokens(document.getElementById('inputText').value);
+  updateCumulativeUI();
+}
+
+function resetCumulative() {
+  cumulative = { runs: 0, tokensSaved: 0, costSaved: 0, totalOrigTokens: 0 };
+  updateCumulativeUI();
+}
+
+function updateCumulativeUI() {
+  document.getElementById('cumRuns').textContent = cumulative.runs;
+  document.getElementById('cumTokens').textContent = cumulative.tokensSaved;
+  document.getElementById('cumCost').textContent = cumulative.costSaved < 0.001
+    ? '$0.000'
+    : '$' + cumulative.costSaved.toFixed(cumulative.costSaved < 0.01 ? 4 : 3);
+  const avgPct = cumulative.totalOrigTokens > 0
+    ? Math.round((cumulative.tokensSaved / cumulative.totalOrigTokens) * 100)
+    : 0;
+  document.getElementById('cumPct').textContent = avgPct + '%';
+}
 
 const ALL_MODELS = ['opus', 'sonnet', 'haiku'];
 
@@ -678,6 +754,16 @@ function optimize() {
   const summary = document.getElementById('savingsSummary');
   if (noChange) {
     summary.innerHTML = 'Zapytanie jest już kompaktowe — brak fraz do usunięcia. Spróbuj trybu <strong>Aggressive</strong> lub wpisz zapytanie z grzecznościowymi wstępami.';
+  }
+
+  // Add to cumulative counter (only when something actually changed)
+  if (!noChange) {
+    const savedTok = Math.max(0, estimateTokens(input) - estimateTokens(optimized));
+    const modelKey = document.getElementById('modelSelect').value;
+    const outTokens = parseInt(document.getElementById('outputTokens').value);
+    const m = MODELS[modelKey];
+    const savedCost = (savedTok / 1e6) * m.input * 1000;
+    addCumulativeSaving(savedTok, savedCost);
   }
 
   recalculate();
