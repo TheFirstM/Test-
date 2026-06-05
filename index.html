@@ -212,11 +212,30 @@
 </div>
 
 <script>
-// v4 — simple universal regex, no lookbehind, no \p{L}
-const VERSION = 'v5';
+// v6 — new patterns + auto-update banner
+const VERSION = 'v6';
+const RAW_URL = 'https://raw.githubusercontent.com/TheFirstM/Test-/claude/token-cost-optimization-GxPza/index.html';
+
 document.addEventListener('DOMContentLoaded', () => {
   const hdr = document.querySelector('header p');
   if (hdr) hdr.textContent = 'Reduce Claude API costs through intelligent query optimization · ' + VERSION;
+
+  // Auto-update check: fetch latest version and show banner if outdated
+  fetch(RAW_URL, { cache: 'no-store' })
+    .then(r => r.text())
+    .then(html => {
+      const m = html.match(/const VERSION = '(v\d+)'/);
+      if (!m) return;
+      const latest = m[1];
+      if (latest !== VERSION) {
+        const bar = document.createElement('div');
+        bar.style.cssText = 'background:#2d3a22;border-bottom:2px solid #68d391;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;';
+        bar.innerHTML = `<span style="color:#68d391;font-size:0.82rem">🔄 Dostępna nowsza wersja <strong>${latest}</strong> (masz ${VERSION}). Pobierz, żeby zobaczyć nowe optymalizacje.</span>`
+          + `<a href="${RAW_URL}" download="token-optimizer.html" style="flex-shrink:0;background:#68d391;color:#0f1117;padding:7px 16px;border-radius:7px;text-decoration:none;font-size:0.8rem;font-weight:700">⬇ Pobierz</a>`;
+        document.body.insertBefore(bar, document.body.firstChild);
+      }
+    })
+    .catch(() => {}); // silent fail when offline
 });
 
 const MODELS = {
@@ -327,6 +346,17 @@ function applyEnglish(t, level) {
     t = rp(t, 'that is to say', 'i.e.');
     t = rp(t, 'and so on', 'etc.');
     t = rp(t, 'and so forth', 'etc.');
+    // Structural compressions (aggressive EN)
+    t = rp(t, 'the appropriate additional necessary', 'the required');
+    t = rp(t, 'appropriate additional necessary', 'required');
+    t = rp(t, 'the necessary additional', 'the required');
+    t = rp(t, 'consisting of', 'with');
+    t = rp(t, 'a template of a', 'a');
+    t = rp(t, 'a template of an', 'an');
+    t = rp(t, 'placed one above the other', 'stacked');
+    t = rp(t, 'one above the other', 'stacked');
+    t = rp(t, 'one on top of the other', 'stacked');
+    t = rp(t, 'regarding the sale by', 'sold by');
   }
   return t;
 }
@@ -426,7 +456,24 @@ function applyPolish(t, level) {
     t = rp(t, 'w przeciągu', 'przez');
     t = rp(t, 'w ciągu', 'przez');
 
-    // Structural compressions
+    // Structural compressions — screenshot queries
+    t = rp(t, 'odpowiedniego dodatkowego koniecznego', '');  // -37 chars
+    t = rp(t, 'odpowiednie dodatkowe konieczne', '');
+    t = rp(t, 'dodatkowego koniecznego', '');
+    t = rp(t, 'koniecznego dodatkowego', '');
+    t = rp(t, 'składającej się z', 'z');    // -16 chars
+    t = rp(t, 'składającego się z', 'z');
+    t = rp(t, 'składającą się z', 'z');
+    t = rp(t, 'złożonej z', 'z');
+    t = rp(t, 'zbudowanej z', 'z');
+    t = rp(t, 'odnośnie', 'o');            // -7 chars (preposition shortening)
+    t = rp(t, 'pomiędzy', 'między');       // -2 chars
+    t = rp(t, 'kompletną', '');            // -9 chars (often filler)
+    t = rp(t, 'kompletny', '');
+    t = rp(t, 'ustawionych jeden nad drugim', 'pionowo');  // -21 chars
+    t = rp(t, 'ustawionych jeden na drugim', 'pionowo');
+
+    // z serią compressions
     t = rp(t, 'z serią odpowiednich', 'z');   // -19 chars
     t = rp(t, 'z serią właściwych', 'z');
     t = rp(t, 'z serią', 'z');
