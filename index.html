@@ -294,77 +294,76 @@ const VERBOSE_PHRASES_EN = {
 
 // -----------------------------------------------------------------------
 // Optimization rules — Polish
+// NOTE: uses (?<!\p{L}) / (?!\p{L}) with /u flag instead of \b
+//       because JS \b doesn't recognise Polish diacritics as word chars
 // -----------------------------------------------------------------------
+const PL = String.raw; // helper to write raw regex strings
+const plw = (pat, flags = 'giu') => new RegExp(pat, flags); // PL Unicode word-boundary regex builder
+
 const FILLER_WORDS_PL = [
-  // grzecznościowe
-  /\b(proszę,?\s+)(?=[a-ząćęłńóśźż])/gi,
-  /\b(czy (możesz|mógłbyś|mógłbyś mi|możesz mi|mogłabyś|mogłabyś mi))\b/gi,
-  /\b(chciałbym,?\s+żebyś|chciałabym,?\s+żebyś|chciałbym,?\s+abyś|chciałabym,?\s+abyś)\b/gi,
-  /\b(chciałbym|chciałabym)\b/gi,
-  /\b(potrzebuję|potrzebowałbym|potrzebowałabym)\b/gi,
-  /\b(powiedz mi|napisz mi|wyjaśnij mi|pokaż mi|pomóż mi)\b/gi,
-  // wypełniacze
-  /\b(po prostu|zasadniczo|właściwie|generalnie|w zasadzie|tak naprawdę|naprawdę|dosyć|dość|raczej|całkiem|nieco|trochę|jakby)\b/gi,
+  // polite padding
+  plw(String.raw`(?<!\p{L})(proszę),?\s+(?=\p{L})`),
+  plw(String.raw`(?<!\p{L})(czy\s+(możesz|mógłbyś|mógłbyś\s+mi|możesz\s+mi|mogłabyś|mogłabyś\s+mi))(?!\p{L})`),
+  plw(String.raw`(?<!\p{L})(chciał(?:bym|abym)),?\s+(?:żebyś|abyś)\s+`),
+  plw(String.raw`(?<!\p{L})(chciał(?:bym|abym))(?!\p{L})`),
+  plw(String.raw`(?<!\p{L})(potrzebuję|potrzebowałbym|potrzebowałabym)(?!\p{L})`),
+  plw(String.raw`(?<!\p{L})(powiedz\s+mi|napisz\s+mi|wyjaśnij\s+mi|pokaż\s+mi|pomóż\s+mi)(?!\p{L})`),
+  // filler adverbs
+  plw(String.raw`(?<!\p{L})(po\s+prostu|zasadniczo|właściwie|generalnie|w\s+zasadzie|tak\s+naprawdę|naprawdę|dosyć|dość|raczej|całkiem|nieco|trochę|jakby)(?!\p{L})`),
 ];
 
 const VERBOSE_PHRASES_PL = {
   light: [
-    [/\bna temat\b/gi, 'o'],
-    [/\bw celu\b/gi, 'aby'],
-    [/\bze względu na to,?\s+że\b/gi, 'bo'],
-    [/\bze względu na fakt,?\s+że\b/gi, 'ponieważ'],
-    [/\bw chwili obecnej\b/gi, 'teraz'],
-    [/\bw przypadku gdy\b/gi, 'jeśli'],
-    [/\bna potrzeby\b/gi, 'dla'],
-    [/\bw zakresie\b/gi, 'o'],
-    [/\bduża liczba\b/gi, 'wiele'],
-    [/\bmała liczba\b/gi, 'kilka'],
-    [/\bkorzystać z\b/gi, 'użyć'],
-    [/\bwziąć pod uwagę\b/gi, 'uwzględnić'],
-    [/\bprzed chwilą\b/gi, 'właśnie'],
-    [/\bw związku z tym\b/gi, 'dlatego'],
-    [/\bw związku z powyższym\b/gi, 'dlatego'],
-    [/\bna podstawie powyższego\b/gi, ''],
+    [plw(String.raw`(?<!\p{L})na\s+temat(?!\p{L})`), 'o'],           // -7 chars
+    [plw(String.raw`(?<!\p{L})w\s+celu(?!\p{L})`), 'aby'],            // -3 chars
+    [plw(String.raw`(?<!\p{L})ze\s+wzgl[eę]du\s+na\s+to,?\s+że(?!\p{L})`), 'bo'],    // -18 chars
+    [plw(String.raw`(?<!\p{L})ze\s+wzgl[eę]du\s+na\s+fakt,?\s+że(?!\p{L})`), 'ponieważ'], // -14 chars
+    [plw(String.raw`(?<!\p{L})w\s+chwili\s+obecnej(?!\p{L})`), 'teraz'],  // -11 chars
+    [plw(String.raw`(?<!\p{L})w\s+przypadku\s+gdy(?!\p{L})`), 'jeśli'],   // -10 chars
+    [plw(String.raw`(?<!\p{L})na\s+potrzeby(?!\p{L})`), 'dla'],            // -5 chars
+    [plw(String.raw`(?<!\p{L})du[zż]a\s+liczba(?!\p{L})`), 'wiele'],       // -5 chars
+    [plw(String.raw`(?<!\p{L})ma[łl]a\s+liczba(?!\p{L})`), 'kilka'],       // -5 chars
+    [plw(String.raw`(?<!\p{L})w\s+zwi[aą]zku\s+z\s+tym(?!\p{L})`), 'dlatego'],        // -8 chars
+    [plw(String.raw`(?<!\p{L})w\s+zwi[aą]zku\s+z\s+powy[zż]szym(?!\p{L})`), 'dlatego'], // -14 chars
+    [plw(String.raw`(?<!\p{L})na\s+podstawie\s+powy[zż]szego(?!\p{L})`), ''],           // -22 chars
+    [plw(String.raw`(?<!\p{L})wzi[aą][cć]\s+pod\s+uwag[eę](?!\p{L})`), 'uwzględnić'],  // -5 chars
   ],
   medium: [
-    [/\bwszelkie\b/gi, 'wszystkie'],
-    [/\bpod kątem\b/gi, 'w zakresie'],
-    [/\bdodatkowo\b/gi, 'i'],
-    [/\ba także\b/gi, 'i'],
-    [/\boraz\b/gi, 'i'],
-    [/\bjednakże\b/gi, 'ale'],
-    [/\bjednak\b/gi, 'ale'],
-    [/\bnatomiast\b/gi, 'a'],
-    [/\bmoim zdaniem\b/gi, ''],
-    [/\buważam,?\s+że\b/gi, ''],
-    [/\bsądzę,?\s+że\b/gi, ''],
-    [/\bwydaje mi się,?\s+że\b/gi, ''],
-    [/\bjak wiadomo,?\s*/gi, ''],
-    [/\bjak wszyscy wiedzą,?\s*/gi, ''],
-    [/\bchciałbym zaznaczyć,?\s+że\b/gi, ''],
-    [/\bwarto zaznaczyć,?\s+że\b/gi, ''],
-    [/\bwarto wspomnieć,?\s+że\b/gi, ''],
-    [/\bpragnę zaznaczyć,?\s+że\b/gi, ''],
-    [/\bdobrze by było\b/gi, ''],
-    [/\bbardzo (mi|nam) zależy\b/gi, ''],
-    [/\bściągnij (wszelkie|wszystkie) dane\b/gi, 'podaj dane'],
-    [/\bzbierz (wszelkie|wszystkie) informacje\b/gi, 'podaj informacje'],
-    [/\bzebrać (wszelkie|wszystkie) informacje\b/gi, 'zebrać informacje'],
+    // FIX: wszelkie → '' (remove, -9 chars) — NOT →wszystkie which was LONGER
+    [plw(String.raw`(?<!\p{L})wszelkie\s*`), ''],                           // -9 chars
+    // FIX: pod kątem → 'o' (-8 chars) — NOT →'w zakresie' which was LONGER
+    [plw(String.raw`(?<!\p{L})pod\s+k[aą]tem(?!\p{L})`), 'o'],             // -8 chars
+    // FIX: dodatkowo → '' (remove, -9 chars) — NOT →'i' which left orphan 'i i'
+    [plw(String.raw`(?<!\p{L})dodatkowo(?!\p{L})`), ''],                    // -9 chars
+    [plw(String.raw`(?<!\p{L})obok\s+siebie(?!\p{L})`), 'obok'],            // -6 chars
+    [plw(String.raw`(?<!\p{L})a\s+tak[zż]e(?!\p{L})`), 'i'],               // -5 chars
+    [plw(String.raw`(?<!\p{L})oraz(?!\p{L})`), 'i'],                        // -3 chars
+    [plw(String.raw`(?<!\p{L})jednak[zż]e(?!\p{L})`), 'ale'],               // -5 chars
+    [plw(String.raw`(?<!\p{L})jednak(?!\p{L})`), 'ale'],                    // -3 chars
+    [plw(String.raw`(?<!\p{L})natomiast(?!\p{L})`), 'a'],                   // -8 chars
+    [plw(String.raw`(?<!\p{L})moim\s+zdaniem(?!\p{L})`), ''],               // -12 chars
+    [plw(String.raw`(?<!\p{L})uwa[zż]am,?\s+[zż]e(?!\p{L})`), ''],         // -10 chars
+    [plw(String.raw`(?<!\p{L})s[aą]dz[eę],?\s+[zż]e(?!\p{L})`), ''],       // -10 chars
+    [plw(String.raw`(?<!\p{L})wydaje\s+mi\s+si[eę],?\s+[zż]e(?!\p{L})`), ''], // -18 chars
+    [plw(String.raw`(?<!\p{L})jak\s+wiadomo,?\s*`), ''],                    // -12 chars
+    [plw(String.raw`(?<!\p{L})jak\s+wszyscy\s+wiedz[aą],?\s*`), ''],        // -20 chars
+    [plw(String.raw`(?<!\p{L})warto\s+zaznaczy[cć],?\s+[zż]e(?!\p{L})`), ''],  // -20 chars
+    [plw(String.raw`(?<!\p{L})warto\s+wspomnie[cć],?\s+[zż]e(?!\p{L})`), ''],  // -20 chars
+    [plw(String.raw`(?<!\p{L})pragnę\s+zaznaczy[cć],?\s+[zż]e(?!\p{L})`), ''], // -22 chars
+    [plw(String.raw`(?<!\p{L})[sś]ci[aą]gnij\s+(wszelkie|wszystkie)\s+dane(?!\p{L})`), 'Podaj dane'], // compress
+    [plw(String.raw`(?<!\p{L})zbierz\s+(wszelkie|wszystkie)\s+informacje(?!\p{L})`), 'Podaj informacje'], // compress
   ],
   aggressive: [
-    [/\bna przykład\b/gi, 'np.'],
-    [/\bto jest\b/gi, 'tj.'],
-    [/\bto znaczy\b/gi, 'tj.'],
-    [/\bi tak dalej\b/gi, 'itd.'],
-    [/\bi tym podobne\b/gi, 'itp.'],
-    [/\bprzy użyciu\b/gi, 'używając'],
-    [/\bza pomocą\b/gi, 'używając'],
-    [/\bw oparciu o\b/gi, 'na podstawie'],
-    [/\bna przestrzeni\b/gi, 'przez'],
-    [/\bw przeciągu\b/gi, 'przez'],
-    [/\bw ciągu\b/gi, 'przez'],
-    [/\bobok siebie\b/gi, 'obok'],
-    [/\bdla (każdego|każdej)\b/gi, 'na'],
+    [plw(String.raw`(?<!\p{L})na\s+przyk[łl]ad(?!\p{L})`), 'np.'],         // -8 chars
+    [plw(String.raw`(?<!\p{L})to\s+jest(?!\p{L})`), 'tj.'],                 // -4 chars
+    [plw(String.raw`(?<!\p{L})to\s+znaczy(?!\p{L})`), 'tj.'],               // -6 chars
+    [plw(String.raw`(?<!\p{L})i\s+tak\s+dalej(?!\p{L})`), 'itd.'],          // -7 chars
+    [plw(String.raw`(?<!\p{L})i\s+tym\s+podobne(?!\p{L})`), 'itp.'],        // -9 chars
+    [plw(String.raw`(?<!\p{L})przy\s+u[zż]yciu(?!\p{L})`), 'przez'],        // -6 chars
+    [plw(String.raw`(?<!\p{L})za\s+pomoc[aą](?!\p{L})`), 'przez'],          // -4 chars
+    [plw(String.raw`(?<!\p{L})w\s+oparciu\s+o(?!\p{L})`), 'na podstawie'],  // -1 char (structural)
+    [plw(String.raw`(?<!\p{L})w\s+przeci[aą]gu(?!\p{L})`), 'przez'],        // -5 chars
+    [plw(String.raw`(?<!\p{L})w\s+ci[aą]gu(?!\p{L})`), 'przez'],            // -3 chars
   ],
 };
 
@@ -428,8 +427,15 @@ function applyOptimizations(text, level) {
     });
   }
 
-  // Final cleanup: collapse spaces, fix orphaned punctuation
-  t = t.replace(/\s{2,}/g, ' ').replace(/\s+([,.!?:;])/g, '$1').replace(/\s+$/gm, '').trim();
+  // Final cleanup
+  t = t.replace(/\s{2,}/g, ' ');                     // collapse multiple spaces
+  t = t.replace(/\s+([,.!?:;])/g, '$1');             // orphan punctuation
+  t = t.replace(/,\s*,/g, ',');                      // double comma
+  t = t.replace(/(?<!\p{L})(i)\s+\1(?!\p{L})/giu, '$1'); // "i i" → "i"
+  t = t.replace(/(?<!\p{L})(a)\s+\1(?!\p{L})/giu, '$1'); // "a a" → "a"
+  t = t.replace(/(?<!\p{L})(ale)\s+\1(?!\p{L})/giu, '$1'); // "ale ale" → "ale"
+  t = t.replace(/,\s+i\s+i\s+/gi, ', ');             // ", i i " → ", "
+  t = t.replace(/\s+$/gm, '').trim();
 
   // Capitalize first character
   if (t.length > 0) {
