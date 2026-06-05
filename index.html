@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token Cost Optimizer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  header { background: linear-gradient(135deg, #1a1f2e, #16213e); border-bottom: 1px solid #2d3748; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+  header svg { width: 36px; height: 36px; }
+  header h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(90deg, #63b3ed, #9f7aea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  header p { font-size: 0.8rem; color: #718096; margin-top: 2px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+  .controls-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-group label { font-size: 0.75rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; }
+  select { background: #1a1f2e; border: 1px solid #2d3748; color: #e2e8f0; padding: 8px 12px; border-radius: 8px; font-size: 0.875rem; cursor: pointer; outline: none; transition: border-color 0.2s; }
+  select:hover, select:focus { border-color: #63b3ed; }
+
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+
+  .panel { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; overflow: hidden; }
+  .panel-header { padding: 14px 18px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
+  .panel-title { font-size: 0.85rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .token-badge { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  .badge-input { background: #2d3748; color: #90cdf4; }
+  .badge-output { background: #2d3a22; color: #68d391; }
+  .badge-savings { background: #2d2240; color: #b794f4; }
+
+  textarea { width: 100%; min-height: 220px; background: transparent; border: none; padding: 16px 18px; color: #e2e8f0; font-size: 0.9rem; font-family: inherit; resize: vertical; outline: none; line-height: 1.6; }
+  textarea::placeholder { color: #4a5568; }
+  textarea[readonly] { color: #a0aec0; cursor: default; }
+
+  .optimize-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #3182ce, #6b46c1); border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; letter-spacing: 0.02em; }
+  .optimize-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+  .optimize-btn:active { transform: translateY(0); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-label { font-size: 0.7rem; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .stat-value { font-size: 1.4rem; font-weight: 700; }
+  .stat-sub { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+  .color-blue { color: #63b3ed; }
+  .color-green { color: #68d391; }
+  .color-purple { color: #b794f4; }
+  .color-yellow { color: #f6e05e; }
+
+  .savings-bar { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+  .bar-label { font-size: 0.8rem; color: #a0aec0; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .bar-track { background: #2d3748; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #3182ce, #6b46c1); border-radius: 4px; transition: width 0.6s ease; width: 0%; }
+  .savings-summary { margin-top: 12px; font-size: 0.8rem; color: #718096; text-align: center; }
+  .savings-summary strong { color: #68d391; }
+
+  .techniques-panel { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px; }
+  .techniques-title { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .technique-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: #2d3748; color: #a0aec0; transition: all 0.2s; }
+  .tag.active { background: #2d2240; color: #b794f4; border-color: #553c9a; }
+
+  .copy-btn { background: #2d3748; border: none; color: #a0aec0; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+  .copy-btn:hover { background: #3d4a5c; color: #e2e8f0; }
+
+  .cost-comparison { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+  .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2d3748; }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-model { font-size: 0.85rem; color: #a0aec0; }
+  .cost-values { display: flex; gap: 20px; font-size: 0.85rem; }
+  .cost-before { color: #fc8181; text-decoration: line-through; opacity: 0.7; }
+  .cost-after { color: #68d391; font-weight: 600; }
+  .cost-save { color: #b794f4; font-size: 0.75rem; }
+  .cost-header { font-size: 0.7rem; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; display: flex; gap: 20px; }
+
+  .empty-state { text-align: center; padding: 40px; color: #4a5568; }
+  .empty-state svg { margin: 0 auto 12px; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="0 0 36 36" fill="none">
+    <circle cx="18" cy="18" r="17" stroke="#63b3ed" stroke-width="1.5" opacity="0.4"/>
+    <path d="M10 18h16M18 10l8 8-8 8" stroke="#9f7aea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="18" cy="18" r="4" fill="#63b3ed" opacity="0.3"/>
+  </svg>
+  <div>
+    <h1>Token Cost Optimizer</h1>
+    <p>Reduce Claude API costs through intelligent query optimization</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="controls-row">
+    <div class="control-group">
+      <label>Model</label>
+      <select id="modelSelect" onchange="recalculate()">
+        <option value="opus">Claude Opus 4.8 — $5 / $25 per 1M</option>
+        <option value="sonnet" selected>Claude Sonnet 4.6 — $3 / $15 per 1M</option>
+        <option value="haiku">Claude Haiku 4.5 — $1 / $5 per 1M</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Optimization Level</label>
+      <select id="levelSelect" onchange="recalculate()">
+        <option value="light">Light — safe, minimal changes</option>
+        <option value="medium" selected>Medium — balanced</option>
+        <option value="aggressive">Aggressive — maximum savings</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Output tokens (est.)</label>
+      <select id="outputTokens" onchange="recalculate()">
+        <option value="100">~100 (short answer)</option>
+        <option value="300" selected>~300 (medium answer)</option>
+        <option value="800">~800 (long answer)</option>
+        <option value="2000">~2000 (detailed report)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Original Query</span>
+        <span class="token-badge badge-input" id="inputBadge">0 tokens</span>
+      </div>
+      <textarea id="inputText" placeholder="Wpisz swoje zapytanie / Enter your prompt here...&#10;&#10;Przykład: Could you please help me understand how I might be able to implement a function that would calculate the factorial of a given number in Python? I would really appreciate if you could provide a detailed explanation with examples." oninput="recalculate()"></textarea>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Optimized Query</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="token-badge badge-output" id="outputBadge">0 tokens</span>
+          <button class="copy-btn" onclick="copyOptimized()">Copy</button>
+        </div>
+      </div>
+      <textarea id="outputText" readonly placeholder="Optimized query will appear here..."></textarea>
+    </div>
+  </div>
+
+  <button class="optimize-btn" onclick="optimize()">⚡ Optimize Query</button>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Original Tokens</div>
+      <div class="stat-value color-blue" id="statOriginal">0</div>
+      <div class="stat-sub">input tokens</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Optimized Tokens</div>
+      <div class="stat-value color-green" id="statOptimized">0</div>
+      <div class="stat-sub">input tokens</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tokens Saved</div>
+      <div class="stat-value color-purple" id="statSaved">0</div>
+      <div class="stat-sub" id="statSavedPct">0% reduction</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cost Saved</div>
+      <div class="stat-value color-yellow" id="statCostSaved">$0.00</div>
+      <div class="stat-sub" id="statCostSavedNote">per 1000 calls</div>
+    </div>
+  </div>
+
+  <div class="savings-bar">
+    <div class="bar-label">
+      <span>Token reduction</span>
+      <span id="barPct">0%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="barFill"></div>
+    </div>
+    <div class="savings-summary" id="savingsSummary">Enter a query and click Optimize to see savings.</div>
+  </div>
+
+  <div class="cost-comparison" id="costComparison">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span class="techniques-title">Cost Per 1000 API Calls</span>
+      <div class="cost-header"><span>Before</span><span>After</span><span>Save</span></div>
+    </div>
+    <div id="costRows">
+      <div class="empty-state"><p>Run optimization to see cost comparison</p></div>
+    </div>
+  </div>
+
+  <div class="techniques-panel">
+    <div class="techniques-title">Applied Optimizations</div>
+    <div class="technique-tags" id="techniqueTags">
+      <span class="tag" id="tag-filler">Filler words</span>
+      <span class="tag" id="tag-verbose">Verbose phrases</span>
+      <span class="tag" id="tag-whitespace">Whitespace</span>
+      <span class="tag" id="tag-redundant">Redundant context</span>
+      <span class="tag" id="tag-polite">Polite padding</span>
+      <span class="tag" id="tag-abbreviate">Abbreviations</span>
+      <span class="tag" id="tag-structure">Structure</span>
+      <span class="tag" id="tag-compress">Phrase compression</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// v6 — new patterns + auto-update banner
+const VERSION = 'v6';
+const RAW_URL = 'https://raw.githubusercontent.com/TheFirstM/Test-/claude/token-cost-optimization-GxPza/index.html';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const hdr = document.querySelector('header p');
+  if (hdr) hdr.textContent = 'Reduce Claude API costs through intelligent query optimization · ' + VERSION;
+
+  // Auto-update check: fetch latest version and show banner if outdated
+  fetch(RAW_URL, { cache: 'no-store' })
+    .then(r => r.text())
+    .then(html => {
+      const m = html.match(/const VERSION = '(v\d+)'/);
+      if (!m) return;
+      const latest = m[1];
+      if (latest !== VERSION) {
+        const bar = document.createElement('div');
+        bar.style.cssText = 'background:#2d3a22;border-bottom:2px solid #68d391;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;';
+        bar.innerHTML = `<span style="color:#68d391;font-size:0.82rem">🔄 Dostępna nowsza wersja <strong>${latest}</strong> (masz ${VERSION}). Pobierz, żeby zobaczyć nowe optymalizacje.</span>`
+          + `<a href="${RAW_URL}" download="token-optimizer.html" style="flex-shrink:0;background:#68d391;color:#0f1117;padding:7px 16px;border-radius:7px;text-decoration:none;font-size:0.8rem;font-weight:700">⬇ Pobierz</a>`;
+        document.body.insertBefore(bar, document.body.firstChild);
+      }
+    })
+    .catch(() => {}); // silent fail when offline
+});
+
+const MODELS = {
+  opus:   { name: 'Claude Opus 4.8',   input: 5.00,  output: 25.00 },
+  sonnet: { name: 'Claude Sonnet 4.6', input: 3.00,  output: 15.00 },
+  haiku:  { name: 'Claude Haiku 4.5',  input: 1.00,  output: 5.00  },
+};
+
+const ALL_MODELS = ['opus', 'sonnet', 'haiku'];
+
+function estimateTokens(text) {
+  if (!text || !text.trim()) return 0;
+  return Math.ceil(text.length / 4);
+}
+
+function formatCost(dollars) {
+  if (dollars < 0.001) return '<$0.001';
+  if (dollars < 0.01) return '$' + dollars.toFixed(4);
+  return '$' + dollars.toFixed(3);
+}
+
+// -----------------------------------------------------------------------
+// Optimization helpers — simple, universal, no lookbehind, no \p{L}
+// -----------------------------------------------------------------------
+
+// Replace a multi-word phrase anywhere in text (case-insensitive)
+function rp(text, from, to) {
+  const esc = from.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(esc, 'gi'), to);
+}
+
+// Replace a single word — boundary using \b (works for ASCII-ending words)
+function rw(text, word, to) {
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp('\\b' + esc + '\\b', 'gi'), to);
+}
+
+// Replace a word that ends with a Polish diacritic (can't use \b after)
+// Matches when preceded by space/start and followed by space/punctuation/end
+function rd(text, word, to) {
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Leading boundary: start of string or whitespace
+  // Trailing boundary: whitespace, punctuation, or end of string
+  return text.replace(new RegExp('(^|\\s)' + esc + '(?=[\\s,.:;!?]|$)', 'gi'),
+    (_, pre) => to ? pre + to : pre);
+}
+
+// -----------------------------------------------------------------------
+// English rules
+// -----------------------------------------------------------------------
+function applyEnglish(t, level) {
+  // Light
+  t = rp(t, 'in order to', 'to');
+  t = rp(t, 'due to the fact that', 'because');
+  t = rp(t, 'at this point in time', 'now');
+  t = rp(t, 'in the event that', 'if');
+  t = rp(t, 'for the purpose of', 'for');
+  t = rp(t, 'with regard to', 'regarding');
+  t = rp(t, 'with respect to', 'for');
+  t = rp(t, 'a large number of', 'many');
+  t = rp(t, 'a small number of', 'few');
+  t = rp(t, 'make use of', 'use');
+  t = rp(t, 'take into account', 'consider');
+
+  if (level === 'medium' || level === 'aggressive') {
+    t = rp(t, 'I would really appreciate if you could', '');
+    t = rp(t, 'I would appreciate it if you could', '');
+    t = rp(t, 'I am writing to ask', '');
+    t = rp(t, 'I was wondering if', '');
+    t = rp(t, 'I was hoping you could', '');
+    t = rp(t, 'Could you provide me with', 'Provide');
+    t = rp(t, 'Can you give me', 'Give me');
+    t = rp(t, 'provide a detailed explanation with examples', 'explain with examples');
+    t = rp(t, 'provide me with a detailed', 'provide a detailed');
+    t = rp(t, 'help me understand how I might be able to', 'explain how to');
+    t = rp(t, 'help me understand how I can', 'explain how to');
+    t = rp(t, 'help me understand how to', 'explain how to');
+    t = rw(t, 'that would be', '');
+    t = rw(t, 'would be great', '');
+    t = rw(t, 'I think', '');
+    t = rw(t, 'I believe', '');
+    t = rw(t, 'please', '');
+    t = rw(t, 'kindly', '');
+    t = rw(t, 'just', '');
+    t = rw(t, 'simply', '');
+    t = rw(t, 'basically', '');
+    t = rw(t, 'essentially', '');
+    t = rw(t, 'actually', '');
+    t = rw(t, 'really', '');
+  }
+
+  if (level === 'aggressive') {
+    t = rp(t, 'Write me', 'Write');
+    t = rp(t, 'Can you write', 'Write');
+    t = rp(t, 'Please write', 'Write');
+    t = rp(t, 'Explain to me', 'Explain');
+    t = rw(t, 'Tell me', '');
+    t = rw(t, 'Give me', '');
+    t = rw(t, 'I need', '');
+    t = rw(t, 'I want', '');
+    t = rp(t, 'in Python programming language', 'in Python');
+    t = rp(t, 'using the Python programming language', 'in Python');
+    t = rp(t, 'function that would', 'function that');
+    t = rp(t, 'function that will', 'function to');
+    t = rp(t, 'code that would', 'code to');
+    t = rp(t, 'code that will', 'code to');
+    t = rp(t, 'for example', 'e.g.');
+    t = rp(t, 'that is to say', 'i.e.');
+    t = rp(t, 'and so on', 'etc.');
+    t = rp(t, 'and so forth', 'etc.');
+    // Structural compressions (aggressive EN)
+    t = rp(t, 'the appropriate additional necessary', 'the required');
+    t = rp(t, 'appropriate additional necessary', 'required');
+    t = rp(t, 'the necessary additional', 'the required');
+    t = rp(t, 'consisting of', 'with');
+    t = rp(t, 'a template of a', 'a');
+    t = rp(t, 'a template of an', 'an');
+    t = rp(t, 'placed one above the other', 'stacked');
+    t = rp(t, 'one above the other', 'stacked');
+    t = rp(t, 'one on top of the other', 'stacked');
+    t = rp(t, 'regarding the sale by', 'sold by');
+  }
+  return t;
+}
+
+// -----------------------------------------------------------------------
+// Polish rules
+// -----------------------------------------------------------------------
+function applyPolish(t, level) {
+  // Light — always applied
+  t = rp(t, 'na temat', 'o');
+  t = rp(t, 'w celu', 'aby');
+  t = rp(t, 'ze względu na fakt, że', 'ponieważ');
+  t = rp(t, 'ze wzgledu na fakt, ze', 'ponieważ');
+  t = rp(t, 'ze względu na to, że', 'bo');
+  t = rp(t, 'ze wzgledu na to, ze', 'bo');
+  t = rp(t, 'w chwili obecnej', 'teraz');
+  t = rp(t, 'w przypadku gdy', 'jeśli');
+  t = rp(t, 'w związku z powyższym', 'dlatego');
+  t = rp(t, 'w zwiazku z powyzszym', 'dlatego');
+  t = rp(t, 'w związku z tym', 'dlatego');
+  t = rp(t, 'w zwiazku z tym', 'dlatego');
+  t = rp(t, 'na potrzeby', 'dla');
+  t = rp(t, 'duża liczba', 'wiele');
+  t = rp(t, 'mała liczba', 'kilka');
+  t = rp(t, 'wziąć pod uwagę', 'uwzględnić');
+  t = rp(t, 'wziac pod uwage', 'uwzglednic');
+
+  if (level === 'medium' || level === 'aggressive') {
+    // Courtesy phrases — use rd() for words ending in diacritic
+    t = rd(t, 'proszę', '');
+    t = rd(t, 'prosze', '');
+    t = rp(t, 'powiedz mi', '');
+    t = rp(t, 'napisz mi', '');
+    t = rp(t, 'wyjaśnij mi', 'wyjaśnij');
+    t = rp(t, 'wyjasniej mi', 'wyjasniej');
+    t = rp(t, 'pokaż mi', 'pokaż');
+    t = rp(t, 'pokaz mi', 'pokaz');
+    t = rp(t, 'pomóż mi', 'pomóż');
+    t = rp(t, 'pomoz mi', 'pomoz');
+    t = rp(t, 'czy możesz', '');
+    t = rp(t, 'czy mozesz', '');
+    t = rp(t, 'czy mógłbyś', '');
+    t = rp(t, 'czy moglbys', '');
+    t = rp(t, 'chciałbym żebyś', '');
+    t = rp(t, 'chciałabym żebyś', '');
+    t = rp(t, 'chcialbym zebys', '');
+    t = rw(t, 'chciałbym', '');
+    t = rw(t, 'chciałabym', '');
+    t = rw(t, 'potrzebuję', '');
+
+    // Filler adverbs — use rd() for diacritic endings
+    t = rd(t, 'naprawdę', '');
+    t = rd(t, 'naprawde', '');
+    t = rd(t, 'dosyć', '');
+    t = rd(t, 'dosyc', '');
+    t = rp(t, 'po prostu', '');
+    t = rw(t, 'zasadniczo', '');
+    t = rw(t, 'generalnie', '');
+    t = rp(t, 'tak naprawdę', '');
+    t = rp(t, 'tak naprawde', '');
+    t = rp(t, 'w zasadzie', '');
+    t = rw(t, 'całkiem', '');
+    t = rw(t, 'raczej', '');
+    t = rw(t, 'nieco', '');
+    t = rw(t, 'trochę', '');
+
+    // Phrase compression (key savings)
+    t = rp(t, 'wszelkie', '');       // -8 chars (NOT →wszystkie!)
+    t = rp(t, 'pod kątem', 'o');     // -8 chars (NOT →w zakresie!)
+    t = rp(t, 'pod katem', 'o');
+    t = rp(t, 'obok siebie', 'obok'); // -6 chars
+    t = rp(t, 'dodatkowo', '');       // -9 chars
+    t = rp(t, 'a także', 'i');
+    t = rp(t, 'a takze', 'i');
+    t = rw(t, 'oraz', 'i');
+    t = rw(t, 'jednakże', 'ale');
+    t = rw(t, 'jednak', 'ale');
+    t = rw(t, 'natomiast', 'a');
+    t = rp(t, 'moim zdaniem', '');
+    t = rp(t, 'warto zaznaczyć, że', '');
+    t = rp(t, 'warto wspomnieć, że', '');
+    t = rp(t, 'jak wiadomo', '');
+    t = rp(t, 'jak wszyscy wiedzą', '');
+
+    // Greeting removal
+    t = t.replace(/^(cześć[!,.]?\s*|witaj[!,.]?\s*|hej[!,.]?\s*|dzień dobry[!,.]?\s*)/i, '');
+  }
+
+  if (level === 'aggressive') {
+    t = rp(t, 'na przykład', 'np.');
+    t = rp(t, 'to jest', 'tj.');
+    t = rp(t, 'to znaczy', 'tj.');
+    t = rp(t, 'i tak dalej', 'itd.');
+    t = rp(t, 'i tym podobne', 'itp.');
+    t = rp(t, 'przy użyciu', 'przez');
+    t = rp(t, 'za pomocą', 'przez');
+    t = rp(t, 'w przeciągu', 'przez');
+    t = rp(t, 'w ciągu', 'przez');
+
+    // Structural compressions — screenshot queries
+    t = rp(t, 'odpowiedniego dodatkowego koniecznego', '');  // -37 chars
+    t = rp(t, 'odpowiednie dodatkowe konieczne', '');
+    t = rp(t, 'dodatkowego koniecznego', '');
+    t = rp(t, 'koniecznego dodatkowego', '');
+    t = rp(t, 'składającej się z', 'z');    // -16 chars
+    t = rp(t, 'składającego się z', 'z');
+    t = rp(t, 'składającą się z', 'z');
+    t = rp(t, 'złożonej z', 'z');
+    t = rp(t, 'zbudowanej z', 'z');
+    t = rp(t, 'odnośnie', 'o');            // -7 chars (preposition shortening)
+    t = rp(t, 'pomiędzy', 'między');       // -2 chars
+    t = rp(t, 'kompletną', '');            // -9 chars (often filler)
+    t = rp(t, 'kompletny', '');
+    t = rp(t, 'ustawionych jeden nad drugim', 'pionowo');  // -21 chars
+    t = rp(t, 'ustawionych jeden na drugim', 'pionowo');
+
+    // z serią compressions
+    t = rp(t, 'z serią odpowiednich', 'z');   // -19 chars
+    t = rp(t, 'z serią właściwych', 'z');
+    t = rp(t, 'z serią', 'z');
+    t = rp(t, 'który z dwóch kandydatów', 'który kandydat'); // -10 chars
+    t = rp(t, 'ktory z dwoch kandydatow', 'ktory kandydat');
+    t = rp(t, 'która z dwóch kandydatek', 'która kandydatka');
+    t = rp(t, 'który z dwóch', 'który z');
+    t = rp(t, 'aby stwierdzić', 'by ocenić');  // -5 chars
+    t = rp(t, 'w celu stwierdzenia', 'by ocenić');
+    t = rp(t, 'w celu określenia', 'by określić');
+    t = rp(t, 'w celu sprawdzenia', 'by sprawdzić');
+
+    // Redundant adjectives often used as filler in Polish prompts
+    t = rp(t, 'odpowiednich pytań', 'pytań');   // -13 chars
+    t = rp(t, 'właściwych pytań', 'pytań');
+    t = rp(t, 'niezbędnych pytań', 'pytań');
+    t = rp(t, 'potrzebnych pytań', 'pytań');
+    t = rp(t, 'odpowiednie pytania', 'pytania');
+    t = rp(t, 'odpowiednich kroków', 'kroków');
+    t = rp(t, 'właściwych kroków', 'kroków');
+    t = rp(t, 'niezbędnych kroków', 'kroków');
+    t = rp(t, 'odpowiednie działania', 'działania');
+    t = rp(t, 'stosowne pytania', 'pytania');
+    t = rp(t, 'stosownych pytań', 'pytań');
+  }
+  return t;
+}
+
+function applyOptimizations(text, level) {
+  const applied = new Set();
+  let t = text;
+
+  const before0 = t;
+  t = t.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  if (t !== before0) applied.add('whitespace');
+
+  // English light always
+  const before1 = t;
+  t = applyEnglish(t, 'light');
+  if (t !== before1) applied.add('verbose');
+
+  // Polish light always
+  const before2 = t;
+  t = applyPolish(t, 'light');
+  if (t !== before2) applied.add('verbose');
+
+  if (level === 'medium' || level === 'aggressive') {
+    const before3 = t;
+    t = applyEnglish(t, level);
+    t = applyPolish(t, level);
+    if (t !== before3) applied.add('filler');
+  }
+
+  if (level === 'aggressive') {
+    const before4 = t;
+    t = applyEnglish(t, 'aggressive');
+    t = applyPolish(t, 'aggressive');
+    if (t !== before4) applied.add('compress');
+  }
+
+  // Post-processing cleanup
+  t = t.replace(/[ \t]+/g, ' ');
+  t = t.replace(/\s+([,.!?:;])/g, '$1');
+  t = t.replace(/,\s*,/g, ',');
+  t = t.replace(/\bi\s+i\b/gi, 'i');
+  t = t.replace(/\ba\s+a\b/gi, 'a');
+  t = t.replace(/\bale\s+ale\b/gi, 'ale');
+  t = t.replace(/,\s+i\s+i\s+/gi, ', ');
+  t = t.replace(/\s+$/gm, '').trim();
+
+  // EN polite greeting
+  if (level === 'medium' || level === 'aggressive') {
+    const politeRe = /^(hello[!,.]?\s*|hi[!,.]?\s*|good (morning|afternoon|evening)[!,.]?\s*|dear (claude|assistant)[!,.]?\s*)/i;
+    const n2 = t.replace(politeRe, '');
+    if (n2 !== t) { applied.add('polite'); t = n2; }
+  }
+
+  if (level === 'aggressive') {
+    const redRe = /\b(as an? (AI|artificial intelligence|language model|chatbot),?\s*)\b/gi;
+    const n3 = t.replace(redRe, '');
+    if (n3 !== t) { applied.add('redundant'); t = n3; }
+  }
+
+  // Final cleanup + capitalize
+  t = t.replace(/[ \t]+/g, ' ').trim();
+  if (t.length > 0) {
+    applied.add('structure');
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  return { optimized: t, applied };
+}
+
+// -----------------------------------------------------------------------
+// UI state
+// -----------------------------------------------------------------------
+let lastOptimized = '';
+let lastApplied = new Set();
+
+function recalculate() {
+  const input = document.getElementById('inputText').value;
+  const inputTokens = estimateTokens(input);
+  const optimizedTokens = lastOptimized ? estimateTokens(lastOptimized) : inputTokens;
+
+  document.getElementById('inputBadge').textContent = inputTokens + ' tokens';
+  document.getElementById('outputBadge').textContent = (lastOptimized ? optimizedTokens : 0) + ' tokens';
+  document.getElementById('statOriginal').textContent = inputTokens;
+  document.getElementById('statOptimized').textContent = lastOptimized ? optimizedTokens : 0;
+
+  const saved = Math.max(0, inputTokens - optimizedTokens);
+  const pct = inputTokens > 0 && lastOptimized ? Math.round((saved / inputTokens) * 100) : 0;
+
+  document.getElementById('statSaved').textContent = saved;
+  document.getElementById('statSavedPct').textContent = pct + '% reduction';
+  document.getElementById('barPct').textContent = pct + '%';
+  document.getElementById('barFill').style.width = pct + '%';
+
+  // Cost saved per 1000 calls
+  const modelKey = document.getElementById('modelSelect').value;
+  const outTokens = parseInt(document.getElementById('outputTokens').value);
+  const m = MODELS[modelKey];
+  const inputCostSaved = (saved / 1e6) * m.input * 1000;
+  document.getElementById('statCostSaved').textContent = formatCost(inputCostSaved);
+
+  if (lastOptimized && inputTokens > 0) {
+    const origCost = (inputTokens / 1e6) * m.input + (outTokens / 1e6) * m.output;
+    const optCost = (optimizedTokens / 1e6) * m.input + (outTokens / 1e6) * m.output;
+    const totalSave = (origCost - optCost) * 1000;
+    document.getElementById('savingsSummary').innerHTML =
+      `Saving <strong>${formatCost(totalSave)}</strong> per 1000 calls with ${m.name} — ` +
+      `${saved} fewer input tokens (${pct}%)`;
+  } else if (inputTokens === 0) {
+    document.getElementById('savingsSummary').textContent = 'Enter a query and click Optimize to see savings.';
+  }
+
+  updateCostTable(inputTokens, lastOptimized ? optimizedTokens : null, outTokens);
+  updateTechniqueTags();
+}
+
+function updateCostTable(inOrig, inOpt, outT) {
+  const costRows = document.getElementById('costRows');
+  if (!inOpt) {
+    costRows.innerHTML = '<div class="empty-state"><p>Run optimization to see cost comparison</p></div>';
+    return;
+  }
+
+  const rows = ALL_MODELS.map(key => {
+    const m = MODELS[key];
+    const before = ((inOrig / 1e6) * m.input + (outT / 1e6) * m.output) * 1000;
+    const after  = ((inOpt  / 1e6) * m.input + (outT / 1e6) * m.output) * 1000;
+    const save   = before - after;
+    return `<div class="cost-row">
+      <span class="cost-model">${m.name}</span>
+      <div class="cost-values">
+        <span class="cost-before">${formatCost(before)}</span>
+        <span class="cost-after">${formatCost(after)}</span>
+        <span class="cost-save">-${formatCost(save)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  costRows.innerHTML = rows;
+}
+
+function updateTechniqueTags() {
+  const allTags = ['filler','verbose','whitespace','redundant','polite','abbreviate','structure','compress'];
+  allTags.forEach(tag => {
+    const el = document.getElementById('tag-' + tag);
+    if (el) el.classList.toggle('active', lastApplied.has(tag));
+  });
+}
+
+function optimize() {
+  const input = document.getElementById('inputText').value;
+  if (!input.trim()) {
+    document.getElementById('outputText').value = '';
+    lastOptimized = '';
+    lastApplied = new Set();
+    recalculate();
+    return;
+  }
+
+  const level = document.getElementById('levelSelect').value;
+  const { optimized, applied } = applyOptimizations(input, level);
+
+  lastOptimized = optimized;
+  lastApplied = applied;
+
+  const noChange = optimized.trim() === input.trim();
+  document.getElementById('outputText').value = optimized;
+  document.getElementById('outputText').style.opacity = noChange ? '0.5' : '1';
+
+  const badge = document.getElementById('outputBadge');
+  if (noChange) {
+    badge.textContent = '✓ Już kompaktowe';
+    badge.style.background = '#2d3748';
+    badge.style.color = '#a0aec0';
+  } else {
+    badge.style.background = '';
+    badge.style.color = '';
+  }
+
+  const summary = document.getElementById('savingsSummary');
+  if (noChange) {
+    summary.innerHTML = 'Zapytanie jest już kompaktowe — brak fraz do usunięcia. Spróbuj trybu <strong>Aggressive</strong> lub wpisz zapytanie z grzecznościowymi wstępami.';
+  }
+
+  recalculate();
+}
+
+function copyOptimized() {
+  const text = document.getElementById('outputText').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Live token counter on input
+document.getElementById('inputText').addEventListener('input', () => {
+  const tokens = estimateTokens(document.getElementById('inputText').value);
+  document.getElementById('inputBadge').textContent = tokens + ' tokens';
+  document.getElementById('statOriginal').textContent = tokens;
+});
+</script>
+</body>
+</html>
