@@ -5,6 +5,48 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Token Cost Optimizer</title>
 <style>
+  #tco-loading {
+    position: fixed; inset: 0; background: #0f1117; z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  }
+  .tco-spinner {
+    width: 44px; height: 44px; border: 3px solid #2d3748;
+    border-top-color: #63b3ed; border-radius: 50%;
+    animation: tco-spin 0.7s linear infinite;
+  }
+  @keyframes tco-spin { to { transform: rotate(360deg); } }
+  .tco-msg { color: #718096; font-family: 'Segoe UI', sans-serif; font-size: 0.85rem; }
+</style>
+<script>
+// Auto-loader: fetch latest version from GitHub on every open.
+// If a newer version exists → replace page with it (document.write).
+// If already latest or offline → remove overlay and show embedded app.
+(function() {
+  var RAW = 'https://raw.githubusercontent.com/TheFirstM/Test-/claude/token-cost-optimization-GxPza/index.html';
+  var CURRENT = 'v8';
+  var fallbackTimer = setTimeout(showApp, 5000);
+
+  fetch(RAW + '?nc=' + Date.now(), { cache: 'no-store' })
+    .then(function(r) { return r.ok ? r.text() : Promise.reject(); })
+    .then(function(html) {
+      clearTimeout(fallbackTimer);
+      var m = html.match(/var CURRENT = '(v\d+)'/);
+      if (!m) { showApp(); return; }
+      if (m[1] === CURRENT) { showApp(); return; } // already latest
+      // Newer version available — replace entire page
+      document.open('text/html', 'replace');
+      document.write(html);
+      document.close();
+    })
+    .catch(function() { clearTimeout(fallbackTimer); showApp(); });
+
+  function showApp() {
+    var el = document.getElementById('tco-loading');
+    if (el) el.style.display = 'none';
+  }
+})();
+</script>
+<style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
 
@@ -101,6 +143,11 @@
 </style>
 </head>
 <body>
+
+<div id="tco-loading">
+  <div class="tco-spinner"></div>
+  <div class="tco-msg">Sprawdzam aktualizacje...</div>
+</div>
 
 <header>
   <svg viewBox="0 0 36 36" fill="none">
@@ -257,30 +304,10 @@
 </div>
 
 <script>
-// v7 — cumulative savings counter
-const VERSION = 'v7';
-const RAW_URL = 'https://raw.githubusercontent.com/TheFirstM/Test-/claude/token-cost-optimization-GxPza/index.html';
-
+const VERSION = 'v8';
 document.addEventListener('DOMContentLoaded', () => {
   const hdr = document.querySelector('header p');
   if (hdr) hdr.textContent = 'Reduce Claude API costs through intelligent query optimization · ' + VERSION;
-
-  // Auto-update check: fetch latest version and show banner if outdated
-  fetch(RAW_URL, { cache: 'no-store' })
-    .then(r => r.text())
-    .then(html => {
-      const m = html.match(/const VERSION = '(v\d+)'/);
-      if (!m) return;
-      const latest = m[1];
-      if (latest !== VERSION) {
-        const bar = document.createElement('div');
-        bar.style.cssText = 'background:#2d3a22;border-bottom:2px solid #68d391;padding:10px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;';
-        bar.innerHTML = `<span style="color:#68d391;font-size:0.82rem">🔄 Dostępna nowsza wersja <strong>${latest}</strong> (masz ${VERSION}). Pobierz, żeby zobaczyć nowe optymalizacje.</span>`
-          + `<a href="${RAW_URL}" download="token-optimizer.html" style="flex-shrink:0;background:#68d391;color:#0f1117;padding:7px 16px;border-radius:7px;text-decoration:none;font-size:0.8rem;font-weight:700">⬇ Pobierz</a>`;
-        document.body.insertBefore(bar, document.body.firstChild);
-      }
-    })
-    .catch(() => {}); // silent fail when offline
 });
 
 const MODELS = {
