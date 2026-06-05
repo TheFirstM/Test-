@@ -213,7 +213,7 @@
 
 <script>
 // v4 — simple universal regex, no lookbehind, no \p{L}
-const VERSION = 'v4';
+const VERSION = 'v5';
 document.addEventListener('DOMContentLoaded', () => {
   const hdr = document.querySelector('header p');
   if (hdr) hdr.textContent = 'Reduce Claude API costs through intelligent query optimization · ' + VERSION;
@@ -425,6 +425,32 @@ function applyPolish(t, level) {
     t = rp(t, 'za pomocą', 'przez');
     t = rp(t, 'w przeciągu', 'przez');
     t = rp(t, 'w ciągu', 'przez');
+
+    // Structural compressions
+    t = rp(t, 'z serią odpowiednich', 'z');   // -19 chars
+    t = rp(t, 'z serią właściwych', 'z');
+    t = rp(t, 'z serią', 'z');
+    t = rp(t, 'który z dwóch kandydatów', 'który kandydat'); // -10 chars
+    t = rp(t, 'ktory z dwoch kandydatow', 'ktory kandydat');
+    t = rp(t, 'która z dwóch kandydatek', 'która kandydatka');
+    t = rp(t, 'który z dwóch', 'który z');
+    t = rp(t, 'aby stwierdzić', 'by ocenić');  // -5 chars
+    t = rp(t, 'w celu stwierdzenia', 'by ocenić');
+    t = rp(t, 'w celu określenia', 'by określić');
+    t = rp(t, 'w celu sprawdzenia', 'by sprawdzić');
+
+    // Redundant adjectives often used as filler in Polish prompts
+    t = rp(t, 'odpowiednich pytań', 'pytań');   // -13 chars
+    t = rp(t, 'właściwych pytań', 'pytań');
+    t = rp(t, 'niezbędnych pytań', 'pytań');
+    t = rp(t, 'potrzebnych pytań', 'pytań');
+    t = rp(t, 'odpowiednie pytania', 'pytania');
+    t = rp(t, 'odpowiednich kroków', 'kroków');
+    t = rp(t, 'właściwych kroków', 'kroków');
+    t = rp(t, 'niezbędnych kroków', 'kroków');
+    t = rp(t, 'odpowiednie działania', 'działania');
+    t = rp(t, 'stosowne pytania', 'pytania');
+    t = rp(t, 'stosownych pytań', 'pytań');
   }
   return t;
 }
@@ -588,7 +614,25 @@ function optimize() {
   lastOptimized = optimized;
   lastApplied = applied;
 
+  const noChange = optimized.trim() === input.trim();
   document.getElementById('outputText').value = optimized;
+  document.getElementById('outputText').style.opacity = noChange ? '0.5' : '1';
+
+  const badge = document.getElementById('outputBadge');
+  if (noChange) {
+    badge.textContent = '✓ Już kompaktowe';
+    badge.style.background = '#2d3748';
+    badge.style.color = '#a0aec0';
+  } else {
+    badge.style.background = '';
+    badge.style.color = '';
+  }
+
+  const summary = document.getElementById('savingsSummary');
+  if (noChange) {
+    summary.innerHTML = 'Zapytanie jest już kompaktowe — brak fraz do usunięcia. Spróbuj trybu <strong>Aggressive</strong> lub wpisz zapytanie z grzecznościowymi wstępami.';
+  }
+
   recalculate();
 }
 
