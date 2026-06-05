@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Token Cost Optimizer</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  header { background: linear-gradient(135deg, #1a1f2e, #16213e); border-bottom: 1px solid #2d3748; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
+  header svg { width: 36px; height: 36px; }
+  header h1 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(90deg, #63b3ed, #9f7aea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  header p { font-size: 0.8rem; color: #718096; margin-top: 2px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+  .controls-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+
+  .control-group { display: flex; flex-direction: column; gap: 6px; }
+  .control-group label { font-size: 0.75rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; }
+  select { background: #1a1f2e; border: 1px solid #2d3748; color: #e2e8f0; padding: 8px 12px; border-radius: 8px; font-size: 0.875rem; cursor: pointer; outline: none; transition: border-color 0.2s; }
+  select:hover, select:focus { border-color: #63b3ed; }
+
+  .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; } }
+
+  .panel { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 12px; overflow: hidden; }
+  .panel-header { padding: 14px 18px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
+  .panel-title { font-size: 0.85rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; }
+  .token-badge { font-size: 0.75rem; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+  .badge-input { background: #2d3748; color: #90cdf4; }
+  .badge-output { background: #2d3a22; color: #68d391; }
+  .badge-savings { background: #2d2240; color: #b794f4; }
+
+  textarea { width: 100%; min-height: 220px; background: transparent; border: none; padding: 16px 18px; color: #e2e8f0; font-size: 0.9rem; font-family: inherit; resize: vertical; outline: none; line-height: 1.6; }
+  textarea::placeholder { color: #4a5568; }
+  textarea[readonly] { color: #a0aec0; cursor: default; }
+
+  .optimize-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #3182ce, #6b46c1); border: none; border-radius: 10px; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; letter-spacing: 0.02em; }
+  .optimize-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4); }
+  .optimize-btn:active { transform: translateY(0); }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  @media (max-width: 640px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-card { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 16px; text-align: center; }
+  .stat-label { font-size: 0.7rem; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .stat-value { font-size: 1.4rem; font-weight: 700; }
+  .stat-sub { font-size: 0.75rem; color: #718096; margin-top: 4px; }
+  .color-blue { color: #63b3ed; }
+  .color-green { color: #68d391; }
+  .color-purple { color: #b794f4; }
+  .color-yellow { color: #f6e05e; }
+
+  .savings-bar { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+  .bar-label { font-size: 0.8rem; color: #a0aec0; margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .bar-track { background: #2d3748; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; background: linear-gradient(90deg, #3182ce, #6b46c1); border-radius: 4px; transition: width 0.6s ease; width: 0%; }
+  .savings-summary { margin-top: 12px; font-size: 0.8rem; color: #718096; text-align: center; }
+  .savings-summary strong { color: #68d391; }
+
+  .techniques-panel { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px; }
+  .techniques-title { font-size: 0.8rem; font-weight: 600; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .technique-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; background: #2d3748; color: #a0aec0; transition: all 0.2s; }
+  .tag.active { background: #2d2240; color: #b794f4; border-color: #553c9a; }
+
+  .copy-btn { background: #2d3748; border: none; color: #a0aec0; padding: 5px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+  .copy-btn:hover { background: #3d4a5c; color: #e2e8f0; }
+
+  .cost-comparison { background: #1a1f2e; border: 1px solid #2d3748; border-radius: 10px; padding: 18px; margin-bottom: 20px; }
+  .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #2d3748; }
+  .cost-row:last-child { border-bottom: none; }
+  .cost-model { font-size: 0.85rem; color: #a0aec0; }
+  .cost-values { display: flex; gap: 20px; font-size: 0.85rem; }
+  .cost-before { color: #fc8181; text-decoration: line-through; opacity: 0.7; }
+  .cost-after { color: #68d391; font-weight: 600; }
+  .cost-save { color: #b794f4; font-size: 0.75rem; }
+  .cost-header { font-size: 0.7rem; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; display: flex; gap: 20px; }
+
+  .empty-state { text-align: center; padding: 40px; color: #4a5568; }
+  .empty-state svg { margin: 0 auto 12px; opacity: 0.4; }
+  .empty-state p { font-size: 0.9rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="0 0 36 36" fill="none">
+    <circle cx="18" cy="18" r="17" stroke="#63b3ed" stroke-width="1.5" opacity="0.4"/>
+    <path d="M10 18h16M18 10l8 8-8 8" stroke="#9f7aea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="18" cy="18" r="4" fill="#63b3ed" opacity="0.3"/>
+  </svg>
+  <div>
+    <h1>Token Cost Optimizer</h1>
+    <p>Reduce Claude API costs through intelligent query optimization</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="controls-row">
+    <div class="control-group">
+      <label>Model</label>
+      <select id="modelSelect" onchange="recalculate()">
+        <option value="opus">Claude Opus 4.8 — $5 / $25 per 1M</option>
+        <option value="sonnet" selected>Claude Sonnet 4.6 — $3 / $15 per 1M</option>
+        <option value="haiku">Claude Haiku 4.5 — $1 / $5 per 1M</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Optimization Level</label>
+      <select id="levelSelect" onchange="recalculate()">
+        <option value="light">Light — safe, minimal changes</option>
+        <option value="medium" selected>Medium — balanced</option>
+        <option value="aggressive">Aggressive — maximum savings</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Output tokens (est.)</label>
+      <select id="outputTokens" onchange="recalculate()">
+        <option value="100">~100 (short answer)</option>
+        <option value="300" selected>~300 (medium answer)</option>
+        <option value="800">~800 (long answer)</option>
+        <option value="2000">~2000 (detailed report)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main-grid">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Original Query</span>
+        <span class="token-badge badge-input" id="inputBadge">0 tokens</span>
+      </div>
+      <textarea id="inputText" placeholder="Wpisz swoje zapytanie / Enter your prompt here...&#10;&#10;Przykład: Could you please help me understand how I might be able to implement a function that would calculate the factorial of a given number in Python? I would really appreciate if you could provide a detailed explanation with examples." oninput="recalculate()"></textarea>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Optimized Query</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="token-badge badge-output" id="outputBadge">0 tokens</span>
+          <button class="copy-btn" onclick="copyOptimized()">Copy</button>
+        </div>
+      </div>
+      <textarea id="outputText" readonly placeholder="Optimized query will appear here..."></textarea>
+    </div>
+  </div>
+
+  <button class="optimize-btn" onclick="optimize()">⚡ Optimize Query</button>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Original Tokens</div>
+      <div class="stat-value color-blue" id="statOriginal">0</div>
+      <div class="stat-sub">input tokens</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Optimized Tokens</div>
+      <div class="stat-value color-green" id="statOptimized">0</div>
+      <div class="stat-sub">input tokens</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tokens Saved</div>
+      <div class="stat-value color-purple" id="statSaved">0</div>
+      <div class="stat-sub" id="statSavedPct">0% reduction</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Cost Saved</div>
+      <div class="stat-value color-yellow" id="statCostSaved">$0.00</div>
+      <div class="stat-sub" id="statCostSavedNote">per 1000 calls</div>
+    </div>
+  </div>
+
+  <div class="savings-bar">
+    <div class="bar-label">
+      <span>Token reduction</span>
+      <span id="barPct">0%</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" id="barFill"></div>
+    </div>
+    <div class="savings-summary" id="savingsSummary">Enter a query and click Optimize to see savings.</div>
+  </div>
+
+  <div class="cost-comparison" id="costComparison">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span class="techniques-title">Cost Per 1000 API Calls</span>
+      <div class="cost-header"><span>Before</span><span>After</span><span>Save</span></div>
+    </div>
+    <div id="costRows">
+      <div class="empty-state"><p>Run optimization to see cost comparison</p></div>
+    </div>
+  </div>
+
+  <div class="techniques-panel">
+    <div class="techniques-title">Applied Optimizations</div>
+    <div class="technique-tags" id="techniqueTags">
+      <span class="tag" id="tag-filler">Filler words</span>
+      <span class="tag" id="tag-verbose">Verbose phrases</span>
+      <span class="tag" id="tag-whitespace">Whitespace</span>
+      <span class="tag" id="tag-redundant">Redundant context</span>
+      <span class="tag" id="tag-polite">Polite padding</span>
+      <span class="tag" id="tag-abbreviate">Abbreviations</span>
+      <span class="tag" id="tag-structure">Structure</span>
+      <span class="tag" id="tag-compress">Phrase compression</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MODELS = {
+  opus:   { name: 'Claude Opus 4.8',   input: 5.00,  output: 25.00 },
+  sonnet: { name: 'Claude Sonnet 4.6', input: 3.00,  output: 15.00 },
+  haiku:  { name: 'Claude Haiku 4.5',  input: 1.00,  output: 5.00  },
+};
+
+const ALL_MODELS = ['opus', 'sonnet', 'haiku'];
+
+function estimateTokens(text) {
+  if (!text || !text.trim()) return 0;
+  return Math.ceil(text.length / 4);
+}
+
+function formatCost(dollars) {
+  if (dollars < 0.001) return '<$0.001';
+  if (dollars < 0.01) return '$' + dollars.toFixed(4);
+  return '$' + dollars.toFixed(3);
+}
+
+// -----------------------------------------------------------------------
+// Optimization rules
+// -----------------------------------------------------------------------
+const FILLER_WORDS = [
+  /\b(please|kindly|would you|could you please|can you please|i would like you to|i want you to|i need you to|feel free to|do not hesitate to|go ahead and|make sure to|be sure to)\b/gi,
+  /\b(just|simply|basically|essentially|actually|really|very|quite|rather|somewhat|fairly|pretty much)\b/gi,
+];
+
+const VERBOSE_PHRASES = {
+  light: [
+    [/\bin order to\b/gi, 'to'],
+    [/\bdue to the fact that\b/gi, 'because'],
+    [/\bat this point in time\b/gi, 'now'],
+    [/\bin the event that\b/gi, 'if'],
+    [/\bfor the purpose of\b/gi, 'for'],
+    [/\bwith regard to\b/gi, 'regarding'],
+    [/\bwith respect to\b/gi, 'for'],
+    [/\ba large number of\b/gi, 'many'],
+    [/\ba small number of\b/gi, 'few'],
+    [/\bmake use of\b/gi, 'use'],
+    [/\btake into account\b/gi, 'consider'],
+  ],
+  medium: [
+    [/\bI would really appreciate if you could\b/gi, ''],
+    [/\bI would appreciate it if you could\b/gi, ''],
+    [/\bI am writing to ask\b/gi, ''],
+    [/\bI was wondering if\b/gi, ''],
+    [/\bI was hoping you could\b/gi, ''],
+    [/\bCould you provide me with\b/gi, 'Provide'],
+    [/\bCan you give me\b/gi, 'Give me'],
+    [/\bhelp me understand how (I might be able to|I can|to)\b/gi, 'explain how to'],
+    [/\bprovide a detailed explanation with examples\b/gi, 'explain with examples'],
+    [/\bprovide me with a detailed\b/gi, 'provide a detailed'],
+    [/\bthat would be\b/gi, ''],
+    [/\bwould be great\b/gi, ''],
+    [/\bI think\b/gi, ''],
+    [/\bI believe\b/gi, ''],
+    [/\bAs you may know,?\s*/gi, ''],
+    [/\bAs we all know,?\s*/gi, ''],
+  ],
+  aggressive: [
+    [/\bWrite me\b/gi, 'Write'],
+    [/\bCan you write\b/gi, 'Write'],
+    [/\bPlease write\b/gi, 'Write'],
+    [/\bExplain to me\b/gi, 'Explain'],
+    [/\bTell me\b/gi, ''],
+    [/\bGive me\b/gi, ''],
+    [/\bShow me\b/gi, 'Show'],
+    [/\bI need\b/gi, ''],
+    [/\bI want\b/gi, ''],
+    [/\bfunction that would\b/gi, 'function that'],
+    [/\bfunction that will\b/gi, 'function to'],
+    [/\bcode that would\b/gi, 'code to'],
+    [/\bcode that will\b/gi, 'code to'],
+    [/\b(a given|a specific)\b/gi, 'a'],
+    [/\bstep[- ]by[- ]step\b/gi, 'step-by-step'],
+    [/\bin Python programming language\b/gi, 'in Python'],
+    [/\busing the Python programming language\b/gi, 'in Python'],
+  ],
+};
+
+function applyOptimizations(text, level) {
+  const applied = new Set();
+  let t = text;
+
+  // Whitespace normalization (always)
+  const before = t;
+  t = t.replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+  if (t !== before) applied.add('whitespace');
+
+  // Verbose phrases — light level always applied
+  VERBOSE_PHRASES.light.forEach(([re, rep]) => {
+    const n = t.replace(re, rep);
+    if (n !== t) { applied.add('verbose'); t = n; }
+  });
+
+  if (level === 'medium' || level === 'aggressive') {
+    // Filler words
+    FILLER_WORDS.forEach(re => {
+      const n = t.replace(re, '');
+      if (n !== t) { applied.add('filler'); t = n; }
+    });
+
+    // Medium verbose phrases
+    VERBOSE_PHRASES.medium.forEach(([re, rep]) => {
+      const n = t.replace(re, rep);
+      if (n !== t) { applied.add('verbose'); t = n; }
+    });
+
+    // Polite padding
+    const politeRe = /^(hello[!,.]?\s*|hi[!,.]?\s*|good (morning|afternoon|evening)[!,.]?\s*|dear (claude|assistant)[!,.]?\s*)/i;
+    const n2 = t.replace(politeRe, '');
+    if (n2 !== t) { applied.add('polite'); t = n2; }
+  }
+
+  if (level === 'aggressive') {
+    // Aggressive verbose
+    VERBOSE_PHRASES.aggressive.forEach(([re, rep]) => {
+      const n = t.replace(re, rep);
+      if (n !== t) { applied.add('compress'); t = n; }
+    });
+
+    // Redundant context: "As an AI language model..." type disclaimers or acknowledgements
+    const redRe = /\b(as an? (AI|artificial intelligence|language model|chatbot),?\s*)/gi;
+    const n3 = t.replace(redRe, '');
+    if (n3 !== t) { applied.add('redundant'); t = n3; }
+
+    // Abbreviate common phrases
+    const abbrevMap = [
+      [/\bfor example\b/gi, 'e.g.'],
+      [/\bthat is to say\b/gi, 'i.e.'],
+      [/\band so on\b/gi, 'etc.'],
+      [/\band so forth\b/gi, 'etc.'],
+      [/\bet cetera\b/gi, 'etc.'],
+    ];
+    abbrevMap.forEach(([re, rep]) => {
+      const n = t.replace(re, rep);
+      if (n !== t) { applied.add('abbreviate'); t = n; }
+    });
+  }
+
+  // Final cleanup: multiple spaces, leading/trailing whitespace, orphaned punctuation
+  t = t.replace(/\s{2,}/g, ' ').replace(/\s+([,.!?])/g, '$1').replace(/\s+$/gm, '').trim();
+
+  // Sentence structure: capitalize first letter after cleanup
+  if (t.length > 0) {
+    applied.add('structure');
+    t = t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
+  return { optimized: t, applied };
+}
+
+// -----------------------------------------------------------------------
+// UI state
+// -----------------------------------------------------------------------
+let lastOptimized = '';
+let lastApplied = new Set();
+
+function recalculate() {
+  const input = document.getElementById('inputText').value;
+  const inputTokens = estimateTokens(input);
+  const optimizedTokens = lastOptimized ? estimateTokens(lastOptimized) : inputTokens;
+
+  document.getElementById('inputBadge').textContent = inputTokens + ' tokens';
+  document.getElementById('outputBadge').textContent = (lastOptimized ? optimizedTokens : 0) + ' tokens';
+  document.getElementById('statOriginal').textContent = inputTokens;
+  document.getElementById('statOptimized').textContent = lastOptimized ? optimizedTokens : 0;
+
+  const saved = Math.max(0, inputTokens - optimizedTokens);
+  const pct = inputTokens > 0 && lastOptimized ? Math.round((saved / inputTokens) * 100) : 0;
+
+  document.getElementById('statSaved').textContent = saved;
+  document.getElementById('statSavedPct').textContent = pct + '% reduction';
+  document.getElementById('barPct').textContent = pct + '%';
+  document.getElementById('barFill').style.width = pct + '%';
+
+  // Cost saved per 1000 calls
+  const modelKey = document.getElementById('modelSelect').value;
+  const outTokens = parseInt(document.getElementById('outputTokens').value);
+  const m = MODELS[modelKey];
+  const inputCostSaved = (saved / 1e6) * m.input * 1000;
+  document.getElementById('statCostSaved').textContent = formatCost(inputCostSaved);
+
+  if (lastOptimized && inputTokens > 0) {
+    const origCost = (inputTokens / 1e6) * m.input + (outTokens / 1e6) * m.output;
+    const optCost = (optimizedTokens / 1e6) * m.input + (outTokens / 1e6) * m.output;
+    const totalSave = (origCost - optCost) * 1000;
+    document.getElementById('savingsSummary').innerHTML =
+      `Saving <strong>${formatCost(totalSave)}</strong> per 1000 calls with ${m.name} — ` +
+      `${saved} fewer input tokens (${pct}%)`;
+  } else if (inputTokens === 0) {
+    document.getElementById('savingsSummary').textContent = 'Enter a query and click Optimize to see savings.';
+  }
+
+  updateCostTable(inputTokens, lastOptimized ? optimizedTokens : null, outTokens);
+  updateTechniqueTags();
+}
+
+function updateCostTable(inOrig, inOpt, outT) {
+  const costRows = document.getElementById('costRows');
+  if (!inOpt) {
+    costRows.innerHTML = '<div class="empty-state"><p>Run optimization to see cost comparison</p></div>';
+    return;
+  }
+
+  const rows = ALL_MODELS.map(key => {
+    const m = MODELS[key];
+    const before = ((inOrig / 1e6) * m.input + (outT / 1e6) * m.output) * 1000;
+    const after  = ((inOpt  / 1e6) * m.input + (outT / 1e6) * m.output) * 1000;
+    const save   = before - after;
+    return `<div class="cost-row">
+      <span class="cost-model">${m.name}</span>
+      <div class="cost-values">
+        <span class="cost-before">${formatCost(before)}</span>
+        <span class="cost-after">${formatCost(after)}</span>
+        <span class="cost-save">-${formatCost(save)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  costRows.innerHTML = rows;
+}
+
+function updateTechniqueTags() {
+  const allTags = ['filler','verbose','whitespace','redundant','polite','abbreviate','structure','compress'];
+  allTags.forEach(tag => {
+    const el = document.getElementById('tag-' + tag);
+    if (el) el.classList.toggle('active', lastApplied.has(tag));
+  });
+}
+
+function optimize() {
+  const input = document.getElementById('inputText').value;
+  if (!input.trim()) {
+    document.getElementById('outputText').value = '';
+    lastOptimized = '';
+    lastApplied = new Set();
+    recalculate();
+    return;
+  }
+
+  const level = document.getElementById('levelSelect').value;
+  const { optimized, applied } = applyOptimizations(input, level);
+
+  lastOptimized = optimized;
+  lastApplied = applied;
+
+  document.getElementById('outputText').value = optimized;
+  recalculate();
+}
+
+function copyOptimized() {
+  const text = document.getElementById('outputText').value;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// Live token counter on input
+document.getElementById('inputText').addEventListener('input', () => {
+  const tokens = estimateTokens(document.getElementById('inputText').value);
+  document.getElementById('inputBadge').textContent = tokens + ' tokens';
+  document.getElementById('statOriginal').textContent = tokens;
+});
+</script>
+</body>
+</html>
