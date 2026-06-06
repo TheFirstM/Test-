@@ -162,6 +162,38 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .reset-btn{margin:16px 14px;padding:12px;border-radius:var(--r-sm);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#fca5a5;font-size:13px;font-weight:600;cursor:pointer;width:calc(100% - 28px);text-align:center}
 .reset-btn:active{background:rgba(239,68,68,.15)}
 
+/* DRABINKA */
+.ldr-prog-wrap{margin-bottom:18px}
+.ldr-prog-lbl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.ldr-prog-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.ldr-prog-fill{height:100%;background:linear-gradient(90deg,var(--success),#34d399);border-radius:3px;transition:width .7s cubic-bezier(.22,1,.36,1)}
+.ldr-item{border-radius:10px;margin:7px 0;overflow:hidden;border:1px solid transparent;transition:all .25s}
+.ldr-item.active{border-color:rgba(59,130,246,.3);background:rgba(59,130,246,.05)}
+.ldr-item.completed{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.05)}
+.ldr-item.locked{opacity:.38;pointer-events:none;background:var(--bg3);border-color:transparent}
+.ldr-hdr{display:flex;align-items:center;gap:10px;padding:13px 14px}
+.ldr-badge{font-size:9px;font-weight:800;letter-spacing:.8px;padding:3px 8px;border-radius:10px;text-transform:uppercase;flex-shrink:0;white-space:nowrap}
+.ldr-badge.active{background:rgba(59,130,246,.18);color:var(--accent)}
+.ldr-badge.completed{background:rgba(16,185,129,.18);color:var(--success)}
+.ldr-badge.locked{background:var(--bg3);color:var(--muted)}
+.ldr-title{font-size:13px;font-weight:700;flex:1;line-height:1.3}
+.ldr-check{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.ldr-check.done{background:var(--success);border-color:var(--success)}
+.ldr-check:active{transform:scale(.88)}
+.ldr-body{padding:0 14px 14px}
+.ldr-task{font-size:13px;color:var(--text);line-height:1.65;margin-bottom:8px;font-weight:500}
+.ldr-why{font-size:12px;color:var(--muted2);background:var(--bg3);padding:8px 11px;border-radius:7px;line-height:1.55;margin-bottom:10px}
+.ldr-why::before{content:"💡  "}
+.ldr-note{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-size:13px;resize:none;height:50px;line-height:1.5;font-family:inherit}
+.ldr-note:focus{outline:none;border-color:var(--accent)}
+.ldr-note::placeholder{color:var(--muted)}
+.ldr-done-msg{font-size:12px;color:var(--success);font-weight:600;margin-top:8px;padding:8px 10px;background:rgba(16,185,129,.09);border-radius:7px;line-height:1.5}
+.ldr-complete{text-align:center;padding:20px 0 8px}
+.ldr-big{font-size:50px;line-height:1;margin-bottom:12px}
+.ldr-complete h3{font-size:17px;font-weight:800;margin-bottom:8px}
+.ldr-complete p{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:6px}
+.ldr-series{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:7px 16px;border-radius:20px;font-size:13px;font-weight:700;margin:10px 0 16px}
+
 @keyframes fadeSlideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .anim-in{animation:fadeSlideUp .35s ease}
@@ -291,10 +323,8 @@ input,button,select,textarea{font-family:inherit}
   </div>
 
   <div class="ex-block">
-    <div class="ex-title">🎲 Mikro-wyzwania dnia</div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Małe kroki poza strefę komfortu · odhacz gdy zrobione</p>
-    <div id="ch-list"></div>
-    <button class="btn btn-secondary" style="margin-top:12px" onclick="App.shuffleCh()">🎲 Losuj nowe</button>
+    <div class="ex-title">🪜 Drabinka odwagi · 7 poziomów</div>
+    <div id="ladder-content"></div>
   </div>
 
   <div class="ex-block">
@@ -442,21 +472,49 @@ const REFRAMES=[
   {neg:"Ona jest poza moim zasięgiem.",pos:"To przekonanie jest bardziej ograniczające niż jakakolwiek różnica między nami. I to przekonanie mam tylko ja — ona nie."}
 ];
 
-const CHALLENGES=[
-  "Zagadaj do kasjera/kasjerki i powiedz 'miłej obsługi' — patrząc w oczy.",
-  "Zrób komplement osobie na ulicy — obserwuj swoją reakcję po.",
-  "Zagadaj do kogoś obcego w kolejce o cokolwiek.",
-  "Trzymaj kontakt wzrokowy z obcą osobą przez 3 sekundy — i się uśmiechnij.",
-  "Siądź przy barze zamiast przy stoliku — jesteś dostępny i widoczny.",
-  "Zadaj barmanowi/barmance pytanie wykraczające poza zamówienie.",
-  "Odezwij się pierwszy do osoby, z którą mijasz się regularnie ale nigdy nie rozmawiałeś.",
-  "Wejdź do sklepu i porozmawiaj ze sprzedawcą o produkcie — nawet jeśli nic nie kupujesz.",
-  "Na imprezie podejdź do grupy obcych i powiedz: 'Hej, mogę tu chwilę stać?'",
-  "Napisz do kogoś interesującego — jedno szczere zdanie dlaczego się odzywasz.",
-  "Oceń swój outfit — jeśli jest bezpieczny, zmień jeden element na bardziej wyrazisty.",
-  "Powiedz komplement znajomej/znajomemu na głos — nie przez SMS.",
-  "Zrób coś sam, co zwykle robisz w grupie (kawiarnia, kino, spacer).",
-  "Zagadaj do kogoś na siłowni / w parku o ćwiczenie lub trasę."
+const LADDER=[
+  {
+    level:1,title:"Rozgrzewka wzrokowa",
+    task:"Uśmiechnij się i nawiąż kontakt wzrokowy z 3 obcymi osobami.",
+    why:"Oswajasz 'bycie widzianym' bez presji rozmowy.",
+    doneMsg:"Pierwszy krok zrobiony. Bycie widzianym nie zabija — właśnie to sprawdziłeś."
+  },
+  {
+    level:2,title:"Drobna uprzejmość",
+    task:"Powiedz szczery komplement 1 osobie (obsługa, ktoś z miasta) — o czymś co realnie zauważyłeś.",
+    why:"Ćwiczysz mówienie czegoś miłego na głos, bez celu 'zdobycia'.",
+    doneMsg:"Komplement bez agendy. To jest właśnie szczerość, której ludzie szukają."
+  },
+  {
+    level:3,title:"Pierwsze słowo",
+    task:"Zadaj obcej osobie 1 proste pytanie (godzina, kierunek, polecenie miejsca).",
+    why:"Przełamujesz barierę otwarcia ust do nieznajomego.",
+    doneMsg:"Usta się otworzyły. Świat się nie skończył. Faktycznie."
+  },
+  {
+    level:4,title:"Small talk",
+    task:"Przeciągnij jedną interakcję o 2 zdania dłużej (komentarz + pytanie).",
+    why:"Uczysz się, że rozmowa może płynąć dalej — a świat się nie kończy.",
+    doneMsg:"Rozmowa sama potrafiła żyć. To ważne odkrycie."
+  },
+  {
+    level:5,title:"Opener sytuacyjny",
+    task:"Zagadnij 1 osobę używając pretekstu z otoczenia (opinia o kawie/produkcie).",
+    why:"Pierwszy 'miękki' podryw z bezpieczną przykrywką.",
+    doneMsg:"Pretekst działa. To nie sztuczka — to otwieranie drzwi."
+  },
+  {
+    level:6,title:"Reset odrzucenia",
+    task:"Świadomie zaakceptuj 1 chłodną reakcję — odejdź z uśmiechem i 'miłego dnia'.",
+    why:"Udowadniasz sobie, że odrzucenie nie boli tak, jak głowa straszy. To filtr, nie porażka.",
+    doneMsg:"To wymagało więcej odwagi niż podejście. I właśnie to zrobiłeś."
+  },
+  {
+    level:7,title:"Direct",
+    task:"Podejdź do kogoś, kto ci się podoba, użyj openera direct i poproś o numer jeśli jest zielone światło.",
+    why:"Pełne podejście. Liczy się, że to zrobiłeś — wynik jest dodatkiem.",
+    doneMsg:"To jest szczyt drabinki. Niezależnie od wyniku — właśnie pokazałeś kim jesteś."
+  }
 ];
 
 const SIM_SCENARIOS=[
@@ -507,21 +565,28 @@ const S={
   curCat:Object.keys(LINES)[0],curLine:0,
   curQuote:0,curRf:0,
   approaches:{count:0,lastDate:null,streak:0},
-  doneCh:[],chSet:[],favs:[],
+  ladderDone:[],ladderNotes:{},completedLadders:0,favs:[],
   load(){
-    const raw=localStorage.getItem('fct_v3');
-    if(!raw)return;
+    const raw=localStorage.getItem('fct_v4');
+    if(!raw){
+      // migrate v3 if exists (keep result + approaches)
+      const old=localStorage.getItem('fct_v3');
+      if(old){const d=JSON.parse(old);this.result=d.result||null;this.approaches=d.approaches||{count:0,lastDate:null,streak:0};}
+      return;
+    }
     const d=JSON.parse(raw);
     this.result=d.result||null;
     this.approaches=d.approaches||{count:0,lastDate:null,streak:0};
-    this.doneCh=d.doneCh||[];
-    this.chSet=d.chSet||[];
+    this.ladderDone=d.ladderDone||[];
+    this.ladderNotes=d.ladderNotes||{};
+    this.completedLadders=d.completedLadders||0;
     this.favs=d.favs||[];
   },
   save(){
-    localStorage.setItem('fct_v3',JSON.stringify({
+    localStorage.setItem('fct_v4',JSON.stringify({
       result:this.result,approaches:this.approaches,
-      doneCh:this.doneCh,chSet:this.chSet,favs:this.favs
+      ladderDone:this.ladderDone,ladderNotes:this.ladderNotes,
+      completedLadders:this.completedLadders,favs:this.favs
     }));
   }
 };
@@ -537,7 +602,7 @@ const App={
     this.renderLine();
     this.renderQuote();
     this.renderRf();
-    this.renderCh();
+    this.renderLadder();
     this.renderSim();
     this.checkDay();
     if(S.result){
@@ -672,7 +737,7 @@ const App={
       document.getElementById('test-quiz').style.display='none';
       document.getElementById('test-result').style.display='block';
     }
-    if(tab==='cwiczenia'){this.renderTracker();this.renderCh();}
+    if(tab==='cwiczenia'){this.renderTracker();this.renderLadder();}
   },
 
   // SCIAGA
@@ -835,29 +900,74 @@ const App={
   },
   nextRf(){S.curRf=(S.curRf+1)%REFRAMES.length;this.renderRf();},
 
-  // CHALLENGES
-  renderCh(){
-    if(!S.chSet.length){this.shuffleCh(false);return;}
-    const today=new Date().toDateString();
-    document.getElementById('ch-list').innerHTML=S.chSet.map(idx=>{
-      const done=S.doneCh.includes(today+'_'+idx);
-      return`<div class="ch-item${done?' done':''}">
-        <button class="ch-check${done?' done':''}" onclick="App.toggleCh(${idx})">
-          ${done?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
-        </button>
-        <span class="ch-text${done?' done':''}">${CHALLENGES[idx]}</span>
-      </div>`;}).join('');
+  // DRABINKA
+  renderLadder(){
+    const el=document.getElementById('ladder-content');
+    if(!el)return;
+    const done=S.ladderDone;
+    // All done → completion screen
+    if(done.length>=LADDER.length){
+      el.innerHTML=`
+        <div class="ldr-complete">
+          <div class="ldr-big">🏆</div>
+          <h3>Ukończyłeś pełną drabinkę!</h3>
+          <p>Każdy z 7 poziomów to dowód na siebie.<br>Nie każdy to robi. Ty to zrobiłeś.</p>
+          <div class="ldr-series">🔥 Twoja seria odwagi: ${S.completedLadders+1} ${S.completedLadders+1===1?'ukończona drabinka':'ukończone drabinki'}</div>
+          <button class="btn btn-primary" onclick="App.resetLadder()">🚀 Zacznij nową serię</button>
+        </div>`;
+      return;
+    }
+    // Progress bar
+    const pct=Math.round(done.length/LADDER.length*100);
+    let html=`
+      <div class="ldr-prog-wrap">
+        <div class="ldr-prog-lbl"><span>${done.length} / ${LADDER.length} poziomów</span><span>${pct}%</span></div>
+        <div class="ldr-prog-bar"><div class="ldr-prog-fill" style="width:${pct}%"></div></div>
+      </div>`;
+    LADDER.forEach((l,i)=>{
+      const isDone=done.includes(i);
+      const isLocked=i>0&&!done.includes(i-1);
+      const cls=isDone?'completed':isLocked?'locked':'active';
+      const badgeTxt=isLocked?'🔒 Poziom '+l.level:isDone?'✓ Poziom '+l.level:'Poziom '+l.level;
+      html+=`
+        <div class="ldr-item ${cls}">
+          <div class="ldr-hdr">
+            <span class="ldr-badge ${cls}">${badgeTxt}</span>
+            <span class="ldr-title">${l.title}</span>
+            ${!isLocked?`<button class="ldr-check${isDone?' done':''}" onclick="App.toggleLevel(${i})">
+              ${isDone?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+            </button>`:'<span style="width:28px"></span>'}
+          </div>
+          ${!isLocked?`
+            <div class="ldr-body">
+              <div class="ldr-task">${l.task}</div>
+              <div class="ldr-why">${l.why}</div>
+              ${isDone?`<div class="ldr-done-msg">🎉 ${l.doneMsg}</div>`:''}
+              <textarea class="ldr-note" placeholder="Jak poszło? Napisz jedno zdanie..." onblur="App.saveNote(${i},this.value)">${S.ladderNotes[i]||''}</textarea>
+            </div>`:''}
+        </div>`;
+    });
+    el.innerHTML=html;
   },
-  shuffleCh(render=true){
-    const arr=[...Array(CHALLENGES.length).keys()].sort(()=>Math.random()-.5);
-    S.chSet=arr.slice(0,3);S.save();
-    if(render)this.renderCh();
+
+  toggleLevel(i){
+    if(S.ladderDone.includes(i))return; // jednokierunkowe
+    S.ladderDone.push(i);
+    S.save();
+    this.renderLadder();
   },
-  toggleCh(idx){
-    const today=new Date().toDateString(),key=today+'_'+idx;
-    if(S.doneCh.includes(key))S.doneCh=S.doneCh.filter(k=>k!==key);
-    else S.doneCh.push(key);
-    S.save();this.renderCh();
+
+  saveNote(i,val){
+    S.ladderNotes[i]=val;
+    S.save();
+  },
+
+  resetLadder(){
+    S.completedLadders++;
+    S.ladderDone=[];
+    S.ladderNotes={};
+    S.save();
+    this.renderLadder();
   },
 
   // SIMULATOR
@@ -896,8 +1006,8 @@ const App={
   },
 
   resetAll(){
-    if(!confirm('Usunąć wszystkie dane? Wynik testu, licznik podejść i postępy zostaną skasowane.'))return;
-    localStorage.removeItem('fct_v3');location.reload();
+    if(!confirm('Usunąć wszystkie dane? Wynik testu, licznik podejść i drabinka zostaną skasowane.'))return;
+    localStorage.removeItem('fct_v4');localStorage.removeItem('fct_v3');location.reload();
   }
 };
 
