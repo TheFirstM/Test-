@@ -216,7 +216,10 @@ input,button,select,textarea{font-family:inherit}
     <div class="card" style="border-color:rgba(59,130,246,.25);margin-top:14px">
       <p style="font-size:13px;color:var(--muted2);line-height:1.7"><strong style="color:var(--text)">4 wymiary osobowości</strong> · <strong style="color:var(--text)">spersonalizowane wskazówki</strong> · zero oceniania</p>
     </div>
-    <div style="padding:6px 14px 24px"><button class="btn btn-primary" onclick="App.startTest()">Zacznij test →</button></div>
+    <div style="padding:6px 14px 0"><button class="btn btn-primary" onclick="App.startTest()">Zacznij test →</button></div>
+    <div style="text-align:center;padding:10px 14px 24px">
+      <button onclick="App.skipTest()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:8px;text-decoration:underline;text-underline-offset:3px">Pomiń test, przejdź dalej →</button>
+    </div>
   </div>
 
   <div id="test-quiz" style="display:none">
@@ -412,7 +415,28 @@ const SCIAGA=[
   {icon:"☕",title:"Opener sytuacyjny",body:`<p><strong>Kawiarnia / kolejka / sklep — pretekst z otoczenia:</strong></p><div class="quote-box"><em>"Ratuj — ta kawiarnia czy tamta obok? Zawsze trafiam w gorszą."</em></div><div class="quote-box"><em>"Wyglądasz jakbyś znała to miejsce. Polecasz coś?"</em></div><p style="margin-top:10px;color:var(--muted2)">Sytuacja daje pretekst — Ty dajesz jej rolę eksperta. Po odpowiedzi naturalnie się przedstawiasz. Rozmowa sama się toczy.</p>`},
   {icon:"🚦",title:"Czytanie sygnałów",body:`<p class="green"><strong>✅ Zielone światło:</strong></p><ul style="color:#6ee7b7;margin-bottom:14px"><li>Uśmiech do oczu, długi kontakt wzrokowy</li><li>Obraca ciało w Twoją stronę</li><li>Dotyka włosów, szyi lub twarzy</li><li>Zadaje pytania wzajemne — interesuje się Tobą</li><li>Śmieje się i nie szuka wymówki żeby odejść</li></ul><p class="red"><strong>🛑 Czerwone światło:</strong></p><ul style="color:#fca5a5;margin-bottom:14px"><li>Monosylabowe odpowiedzi, wzrok gdzieś indziej</li><li>Zamknięta mowa ciała — ramiona, telefon, dystans</li><li>Szuka wzrokiem wyjścia, nie zadaje pytań wzajemnych</li></ul><div class="alert-box"><strong style="color:#fca5a5">Każde "nie" — wprost lub sygnałem — przyjmujesz z klasą:</strong><br><br>"Spoko, miło gadać — powodzenia!" + uśmiech i odchodzisz.<br><br>To NIE są negocjacje. Nie ma "ale", nie ma drugiej próby. Szanując jej decyzję, pokazujesz kim naprawdę jesteś — i budujesz wartość której żaden tekst nie zastąpi.</div>`},
   {icon:"😏",title:"Droczenie / teasing",body:`<p>Lekkie droczenie = zainteresowanie + humor. Nigdy nie obraża — bawi <strong>oboje</strong>.</p><div class="quote-box2"><em>"Okej, oficjalnie zaczynam się ciebie trochę bać." [po czymś odważnym co powiedziała]</em></div><div class="quote-box2"><em>"Dobra, robisz się zbyt interesująca, muszę się skupić." [gdy rozmowa nabiera tempa]</em></div><p style="margin-top:10px;color:var(--muted2)">Po droczeniu — uśmiech lub oczekiwanie jej riposty. Nigdy nie tłumaczysz, że to był żart. Droczenie działa gdy oboje dobrze się bawią — obserwuj jej reakcję.</p>`},
-  {icon:"🏆",title:"Wyjście na szczycie + numer",body:`<p>Odchodź gdy rozmowa idzie dobrze — <strong>nie czekaj</strong> aż się wyczerpie.</p><div class="quote-box"><em>"Muszę lecieć, ale fajnie się gadało. Daj numer, wyskoczymy na kawę w tym tygodniu."</em></div><ul><li>Konkretny termin: "w tym tygodniu" — nie "kiedyś"</li><li>"Muszę lecieć" pokazuje, że masz własne życie</li><li>Nie pytasz <em>czy</em> ma ochotę — proponujesz konkretnie</li><li>Jak odmówi: "Spoko, było miło gadać" + uśmiech i odchodzisz. Bez dyskusji.</li></ul>`}
+  {icon:"🏆",title:"Wyjście na szczycie + numer",body:`<p>Odchodź gdy rozmowa idzie dobrze — <strong>nie czekaj</strong> aż się wyczerpie.</p><div class="quote-box"><em>"Muszę lecieć, ale fajnie się gadało. Daj numer, wyskoczymy na kawę w tym tygodniu."</em></div><ul><li>Konkretny termin: "w tym tygodniu" — nie "kiedyś"</li><li>"Muszę lecieć" pokazuje, że masz własne życie</li><li>Nie pytasz <em>czy</em> ma ochotę — proponujesz konkretnie</li><li>Jak odmówi: "Spoko, było miło gadać" + uśmiech i odchodzisz. Bez dyskusji.</li></ul>`},
+  {icon:"😈",title:"Efekt łobuza",body:`<p><strong>Łobuz to nie osoba bez zasad</strong> — to osoba z zasadami, których nie łamie dla chwilowego poklasku.</p>
+    <ul style="margin:10px 0 0 16px">
+      <li>Masz wyraźne opinie i <strong>bronisz ich</strong> — nie zgadzasz się dla świętego spokoju</li>
+      <li>Nie tłumaczysz każdej decyzji — tajemniczość to magnetyzm, nie zamknięcie</li>
+      <li>Potrafisz powiedzieć <strong>"nie"</strong> — nawet komuś, kto ci się podoba</li>
+      <li>Masz życie poza rozmową — i nie rezygnujesz z niego dla chwilowego zainteresowania</li>
+      <li>Lekko nieprzewidywalny — nie działasz według schematu, który ona już zna</li>
+      <li>Nie odpisujesz w 0.3 sekundy — masz co robić</li>
+    </ul>
+    <div class="quote-box2" style="margin-top:14px"><em>Łobuz nie udaje złego — on po prostu nie potrzebuje niczyich zgody na bycie sobą.</em></div>
+    <p style="margin-top:10px;color:var(--muted2)">To nie jest maska do włożenia. Budujesz to postawą i codziennymi wyborami — nie tekstami.</p>`},
+  {icon:"🔥",title:"Super kochanek",body:`<p>Bycie świetnym kochankiem zaczyna się zanim cokolwiek się wydarzy — i nie chodzi tylko o to, co robisz.</p>
+    <ul style="margin:10px 0 0 16px">
+      <li><strong>Słuchasz naprawdę</strong> — pamiętasz co mówiła, wracasz do tego. Ona to czuje.</li>
+      <li>Zwracasz uwagę na detale — jak reaguje, co sprawia jej radość, co ją niepokoi</li>
+      <li><strong>Nie spieszysz się</strong> — napięcie buduje się w czasie, nie w pośpiechu. Powolność jest sexy.</li>
+      <li>Komplementujesz konkretnie: <em>"to co powiedziałaś przed chwilą"</em> działa mocniej niż <em>"ładna jesteś"</em></li>
+      <li>Dajesz jej czuć się jednocześnie <strong>bezpiecznie i pożądaną</strong> — to rzadka i silna kombinacja</li>
+      <li>Masz odwagę być wrażliwym — to nie słabość. To siła, której większość mężczyzn się boi.</li>
+    </ul>
+    <div class="quote-box" style="margin-top:14px"><em>"Najlepszy kochanek to ten, który sprawia że ona sama chce więcej — nie ten, który próbuje ją przekonać."</em></div>`}
 ];
 
 const LINES={
@@ -565,11 +589,10 @@ const S={
   curCat:Object.keys(LINES)[0],curLine:0,
   curQuote:0,curRf:0,
   approaches:{count:0,lastDate:null,streak:0},
-  ladderDone:[],ladderNotes:{},completedLadders:0,favs:[],
+  ladderDone:[],ladderNotes:{},completedLadders:0,testSkipped:false,favs:[],
   load(){
     const raw=localStorage.getItem('fct_v4');
     if(!raw){
-      // migrate v3 if exists (keep result + approaches)
       const old=localStorage.getItem('fct_v3');
       if(old){const d=JSON.parse(old);this.result=d.result||null;this.approaches=d.approaches||{count:0,lastDate:null,streak:0};}
       return;
@@ -580,13 +603,14 @@ const S={
     this.ladderDone=d.ladderDone||[];
     this.ladderNotes=d.ladderNotes||{};
     this.completedLadders=d.completedLadders||0;
+    this.testSkipped=d.testSkipped||false;
     this.favs=d.favs||[];
   },
   save(){
     localStorage.setItem('fct_v4',JSON.stringify({
       result:this.result,approaches:this.approaches,
       ladderDone:this.ladderDone,ladderNotes:this.ladderNotes,
-      completedLadders:this.completedLadders,favs:this.favs
+      completedLadders:this.completedLadders,testSkipped:this.testSkipped,favs:this.favs
     }));
   }
 };
@@ -609,6 +633,9 @@ const App={
       this.showResult(S.result,false);
       document.getElementById('nav').classList.add('visible');
       this.go('sciaga');
+    } else if(S.testSkipped){
+      document.getElementById('nav').classList.add('visible');
+      this.go('sciaga');
     }
   },
 
@@ -622,6 +649,12 @@ const App={
       S.save();
     }
     this.renderTracker();
+  },
+
+  skipTest(){
+    S.testSkipped=true;S.save();
+    document.getElementById('nav').classList.add('visible');
+    this.go('sciaga');
   },
 
   // TEST
