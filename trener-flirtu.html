@@ -16,14 +16,14 @@
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
 #app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 
-.screen{display:none;flex:1;overflow-y:auto;padding-bottom:84px;min-height:100vh}
+.screen{display:none;flex:1;overflow-y:auto;padding-bottom:140px;min-height:100vh}
 .screen.active{display:block}
 
 #nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#0a0f1e;border-top:1px solid var(--border);display:none;z-index:100}
 #nav.visible{display:flex}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 12px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;transition:color .2s;gap:3px}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 2px 10px;background:none;border:none;color:var(--muted);font-size:9px;cursor:pointer;transition:color .2s;gap:2px}
 .nav-btn.active{color:var(--accent)}
-.nav-btn svg{width:20px;height:20px}
+.nav-btn svg{width:18px;height:18px}
 .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0;transition:opacity .2s}
 .nav-btn.active .nav-dot{opacity:1}
 
@@ -82,7 +82,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .coll-icon{transition:transform .3s;color:var(--muted);flex-shrink:0}
 .coll-card.open .coll-icon{transform:rotate(180deg)}
 .coll-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
-.coll-card.open .coll-body{max-height:1400px}
+.coll-card.open .coll-body{max-height:2400px}
 .coll-inner{padding:0 18px 18px;font-size:13px;line-height:1.75;color:var(--muted2)}
 .coll-inner strong{color:var(--text)}
 .coll-inner ul{margin:8px 0 0 16px}
@@ -136,13 +136,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .rf-arrow{text-align:center;font-size:22px;color:var(--muted);margin:8px 0}
 .rf-pos{background:rgba(16,185,129,.09);border:1px solid rgba(16,185,129,.2);border-radius:9px;padding:12px 14px;font-size:13px;color:#6ee7b7;line-height:1.6}
 
-.ch-item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:9px;background:var(--bg3);margin:7px 0;transition:background .2s}
-.ch-item.done{background:rgba(16,185,129,.08)}
-.ch-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .18s;margin-top:1px}
-.ch-check.done{background:var(--success);border-color:var(--success)}
-.ch-text{font-size:13px;line-height:1.55;transition:all .2s}
-.ch-text.done{text-decoration:line-through;color:var(--muted)}
-
 .sim-chat{min-height:100px;margin-bottom:12px}
 .sim-msg{padding:11px 15px;border-radius:13px;font-size:13px;line-height:1.5;margin:7px 0;max-width:82%}
 .sim-you{background:linear-gradient(135deg,rgba(59,130,246,.25),rgba(139,92,246,.25));border:1px solid rgba(59,130,246,.35);margin-left:auto;text-align:right}
@@ -193,6 +186,39 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-
 .ldr-complete h3{font-size:17px;font-weight:800;margin-bottom:8px}
 .ldr-complete p{font-size:13px;color:var(--muted2);line-height:1.65;margin-bottom:6px}
 .ldr-series{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:var(--warn);padding:7px 16px;border-radius:20px;font-size:13px;font-weight:700;margin:10px 0 16px}
+
+/* PANIC FAB */
+#panic-fab{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);z-index:150;background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border:none;border-radius:50px;padding:11px 28px;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 24px rgba(239,68,68,.55),0 0 0 1px rgba(239,68,68,.3);letter-spacing:.5px;display:none;align-items:center;gap:7px;white-space:nowrap;transition:transform .15s,box-shadow .15s}
+#panic-fab.visible{display:flex}
+#panic-fab:active{transform:translateX(-50%) scale(.93);box-shadow:0 2px 12px rgba(239,68,68,.4)}
+
+/* PANIC OVERLAY */
+#panic-overlay{position:fixed;inset:0;background:#050811;z-index:300;display:none;flex-direction:column;overflow-y:auto;padding-bottom:30px}
+#panic-overlay.open{display:flex}
+.panic-hdr{padding:20px 20px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
+.panic-title{font-size:22px;font-weight:900;background:linear-gradient(90deg,#ef4444,#f97316);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:.5px}
+.panic-close{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.panic-tagline{text-align:center;font-size:13px;color:var(--muted2);padding:16px 20px 6px;line-height:1.6}
+.panic-section{margin:12px 14px 0;border-radius:var(--r);overflow:hidden}
+.panic-section-green{background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.25)}
+.panic-section-blue{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.25)}
+.panic-sec-title{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:14px 16px 4px}
+.panic-section-green .panic-sec-title{color:var(--success)}
+.panic-section-blue .panic-sec-title{color:var(--accent)}
+.panic-text{font-size:18px;font-weight:700;line-height:1.5;padding:10px 16px 14px;color:var(--text)}
+.panic-note{font-size:12px;color:var(--muted2);padding:0 16px 12px;line-height:1.5;font-style:italic}
+.panic-actions{display:flex;gap:8px;padding:0 14px 16px}
+.panic-copy{flex:1;padding:11px;border-radius:8px;border:none;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+.panic-copy-g{background:rgba(16,185,129,.18);color:var(--success)}
+.panic-copy-g:active{background:rgba(16,185,129,.32)}
+.panic-copy-b{background:rgba(59,130,246,.18);color:var(--accent)}
+.panic-copy-b:active{background:rgba(59,130,246,.32)}
+.panic-reroll{padding:11px 16px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;cursor:pointer;transition:background .15s}
+.panic-reroll:active{background:var(--bg2)}
+
+/* UBIOR */
+.ubior-zasada{background:linear-gradient(135deg,rgba(139,92,246,.1),rgba(59,130,246,.1));border:1px solid rgba(139,92,246,.25);border-radius:var(--r);margin:10px 14px;padding:14px 16px;font-size:13px;color:var(--muted2);text-align:center;line-height:1.65}
+.ubior-zasada strong{color:var(--text)}
 
 @keyframes fadeSlideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
@@ -341,6 +367,14 @@ input,button,select,textarea{font-family:inherit}
   <div style="height:8px"></div>
 </div>
 
+<!-- UBIOR -->
+<div class="screen" id="screen-ubior">
+  <div class="hdr"><h1>👔 Ubiór</h1><p>Dress to impress · bez wydawania fortuny</p></div>
+  <div style="padding:6px 0 4px" id="ubior-cards"></div>
+  <div class="ubior-zasada"><strong>Zasada:</strong> Ubiór ma podkreślać ciebie, nie krzyczeć za ciebie.</div>
+  <div style="height:8px"></div>
+</div>
+
 <!-- NAV -->
 <nav id="nav">
   <button class="nav-btn" data-tab="sciaga" onclick="App.go('sciaga')">
@@ -357,9 +391,45 @@ input,button,select,textarea{font-family:inherit}
   </button>
   <button class="nav-btn" data-tab="cwiczenia" onclick="App.go('cwiczenia')">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-    Ćwiczenia<div class="nav-dot"></div>
+    Ćwicz.<div class="nav-dot"></div>
+  </button>
+  <button class="nav-btn" data-tab="ubior" onclick="App.go('ubior')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>
+    Ubiór<div class="nav-dot"></div>
   </button>
 </nav>
+
+<!-- PANIC OVERLAY -->
+<div id="panic-overlay">
+  <div class="panic-hdr">
+    <div class="panic-title">⚡ PANIC</div>
+    <button class="panic-close" onclick="App.closePanic()">✕</button>
+  </div>
+  <div class="panic-tagline">Oddychasz, wybierasz, działasz. Liczy się ruch.</div>
+
+  <div class="panic-section panic-section-green">
+    <div class="panic-sec-title">🗣 ZAGADAJ</div>
+    <div class="panic-text" id="panic-text-a"></div>
+    <div class="panic-actions">
+      <button class="panic-copy panic-copy-g" onclick="App.panicCopy('a',this)">📋 Kopiuj</button>
+      <button class="panic-reroll" onclick="App.panicReroll('a')">🎲 Nowy</button>
+    </div>
+  </div>
+
+  <div class="panic-section panic-section-blue">
+    <div class="panic-sec-title">🕊 WYCOFAJ Z HONOREM</div>
+    <div class="panic-text" id="panic-text-b"></div>
+    <div class="panic-note">Wyjście z honorem to nie porażka — to klasa.</div>
+    <div class="panic-actions">
+      <button class="panic-copy panic-copy-b" onclick="App.panicCopy('b',this)">📋 Kopiuj</button>
+      <button class="panic-reroll" onclick="App.panicReroll('b')">🎲 Nowy</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANIC FAB -->
+<button id="panic-fab" onclick="App.openPanic()">⚡ PANIC</button>
+
 </div>
 
 <script>
@@ -416,27 +486,9 @@ const SCIAGA=[
   {icon:"🚦",title:"Czytanie sygnałów",body:`<p class="green"><strong>✅ Zielone światło:</strong></p><ul style="color:#6ee7b7;margin-bottom:14px"><li>Uśmiech do oczu, długi kontakt wzrokowy</li><li>Obraca ciało w Twoją stronę</li><li>Dotyka włosów, szyi lub twarzy</li><li>Zadaje pytania wzajemne — interesuje się Tobą</li><li>Śmieje się i nie szuka wymówki żeby odejść</li></ul><p class="red"><strong>🛑 Czerwone światło:</strong></p><ul style="color:#fca5a5;margin-bottom:14px"><li>Monosylabowe odpowiedzi, wzrok gdzieś indziej</li><li>Zamknięta mowa ciała — ramiona, telefon, dystans</li><li>Szuka wzrokiem wyjścia, nie zadaje pytań wzajemnych</li></ul><div class="alert-box"><strong style="color:#fca5a5">Każde "nie" — wprost lub sygnałem — przyjmujesz z klasą:</strong><br><br>"Spoko, miło gadać — powodzenia!" + uśmiech i odchodzisz.<br><br>To NIE są negocjacje. Nie ma "ale", nie ma drugiej próby. Szanując jej decyzję, pokazujesz kim naprawdę jesteś — i budujesz wartość której żaden tekst nie zastąpi.</div>`},
   {icon:"😏",title:"Droczenie / teasing",body:`<p>Lekkie droczenie = zainteresowanie + humor. Nigdy nie obraża — bawi <strong>oboje</strong>.</p><div class="quote-box2"><em>"Okej, oficjalnie zaczynam się ciebie trochę bać." [po czymś odważnym co powiedziała]</em></div><div class="quote-box2"><em>"Dobra, robisz się zbyt interesująca, muszę się skupić." [gdy rozmowa nabiera tempa]</em></div><p style="margin-top:10px;color:var(--muted2)">Po droczeniu — uśmiech lub oczekiwanie jej riposty. Nigdy nie tłumaczysz, że to był żart. Droczenie działa gdy oboje dobrze się bawią — obserwuj jej reakcję.</p>`},
   {icon:"🏆",title:"Wyjście na szczycie + numer",body:`<p>Odchodź gdy rozmowa idzie dobrze — <strong>nie czekaj</strong> aż się wyczerpie.</p><div class="quote-box"><em>"Muszę lecieć, ale fajnie się gadało. Daj numer, wyskoczymy na kawę w tym tygodniu."</em></div><ul><li>Konkretny termin: "w tym tygodniu" — nie "kiedyś"</li><li>"Muszę lecieć" pokazuje, że masz własne życie</li><li>Nie pytasz <em>czy</em> ma ochotę — proponujesz konkretnie</li><li>Jak odmówi: "Spoko, było miło gadać" + uśmiech i odchodzisz. Bez dyskusji.</li></ul>`},
-  {icon:"😈",title:"Efekt łobuza",body:`<p><strong>Łobuz to nie osoba bez zasad</strong> — to osoba z zasadami, których nie łamie dla chwilowego poklasku.</p>
-    <ul style="margin:10px 0 0 16px">
-      <li>Masz wyraźne opinie i <strong>bronisz ich</strong> — nie zgadzasz się dla świętego spokoju</li>
-      <li>Nie tłumaczysz każdej decyzji — tajemniczość to magnetyzm, nie zamknięcie</li>
-      <li>Potrafisz powiedzieć <strong>"nie"</strong> — nawet komuś, kto ci się podoba</li>
-      <li>Masz życie poza rozmową — i nie rezygnujesz z niego dla chwilowego zainteresowania</li>
-      <li>Lekko nieprzewidywalny — nie działasz według schematu, który ona już zna</li>
-      <li>Nie odpisujesz w 0.3 sekundy — masz co robić</li>
-    </ul>
-    <div class="quote-box2" style="margin-top:14px"><em>Łobuz nie udaje złego — on po prostu nie potrzebuje niczyich zgody na bycie sobą.</em></div>
-    <p style="margin-top:10px;color:var(--muted2)">To nie jest maska do włożenia. Budujesz to postawą i codziennymi wyborami — nie tekstami.</p>`},
-  {icon:"🔥",title:"Super kochanek",body:`<p>Bycie świetnym kochankiem zaczyna się zanim cokolwiek się wydarzy — i nie chodzi tylko o to, co robisz.</p>
-    <ul style="margin:10px 0 0 16px">
-      <li><strong>Słuchasz naprawdę</strong> — pamiętasz co mówiła, wracasz do tego. Ona to czuje.</li>
-      <li>Zwracasz uwagę na detale — jak reaguje, co sprawia jej radość, co ją niepokoi</li>
-      <li><strong>Nie spieszysz się</strong> — napięcie buduje się w czasie, nie w pośpiechu. Powolność jest sexy.</li>
-      <li>Komplementujesz konkretnie: <em>"to co powiedziałaś przed chwilą"</em> działa mocniej niż <em>"ładna jesteś"</em></li>
-      <li>Dajesz jej czuć się jednocześnie <strong>bezpiecznie i pożądaną</strong> — to rzadka i silna kombinacja</li>
-      <li>Masz odwagę być wrażliwym — to nie słabość. To siła, której większość mężczyzn się boi.</li>
-    </ul>
-    <div class="quote-box" style="margin-top:14px"><em>"Najlepszy kochanek to ten, który sprawia że ona sama chce więcej — nie ten, który próbuje ją przekonać."</em></div>`}
+  {icon:"🧲",title:"Przyciąganie",body:`<p style="font-size:12px;color:var(--muted2);margin-bottom:12px;font-style:italic">Czytaj reakcję i zgodę — napięcie buduje się obopólnie, nigdy na siłę.</p><ul><li><strong>Niedopowiedzenie:</strong> nie dawaj wszystkiego od razu — niedosyt przyciąga</li><li><strong>Spokój i niespieszność:</strong> wolniejsze ruchy, spokojny głos = pewność</li><li><strong>Kontakt wzrokowy:</strong> o sekundę dłużej + uśmiech, potem odwrócenie wzroku</li><li><strong>Własne życie (abundance):</strong> masz pasje i plany, ona jest dodatkiem nie centrum</li><li><strong>Humor + szczerość:</strong> najpierw lekko, potem jedno prawdziwe zdanie — kontrast tworzy iskrę</li><li><strong>Dotyk stopniowany:</strong> drobny, naturalny, czytasz reakcję — sztywnieje → odpuszczasz</li><li><strong>Zostaw chcącą więcej:</strong> wyjście na szczycie energii</li><li><strong>Obecność 100%:</strong> zero telefonu, słuchasz naprawdę</li><li><strong>Zapach i zadbanie:</strong> dyskretny zapach uruchamia emocje mocniej niż słowa</li></ul>`},
+  {icon:"😈",title:"Efekt łobuza",body:`<p><strong>Łobuz to nie osoba bez zasad</strong> — to osoba z zasadami, których nie łamie dla chwilowego poklasku.</p><ul style="margin:10px 0 0 16px"><li>Masz wyraźne opinie i <strong>bronisz ich</strong> — nie zgadzasz się dla świętego spokoju</li><li>Nie tłumaczysz każdej decyzji — tajemniczość to magnetyzm, nie zamknięcie</li><li>Potrafisz powiedzieć <strong>"nie"</strong> — nawet komuś, kto ci się podoba</li><li>Masz życie poza rozmową — i nie rezygnujesz z niego dla chwilowego zainteresowania</li><li>Lekko nieprzewidywalny — nie działasz według schematu, który ona już zna</li><li>Nie odpisujesz w 0.3 sekundy — masz co robić</li></ul><div class="quote-box2" style="margin-top:14px"><em>Łobuz nie udaje złego — on po prostu nie potrzebuje niczyich zgody na bycie sobą.</em></div><p style="margin-top:10px;color:var(--muted2)">To nie jest maska do włożenia. Budujesz to postawą i codziennymi wyborami — nie tekstami.</p>`},
+  {icon:"🔥",title:"Super kochanek",body:`<p>Bycie świetnym kochankiem zaczyna się zanim cokolwiek się wydarzy — i nie chodzi tylko o to, co robisz.</p><ul style="margin:10px 0 0 16px"><li><strong>Słuchasz naprawdę</strong> — pamiętasz co mówiła, wracasz do tego. Ona to czuje.</li><li>Zwracasz uwagę na detale — jak reaguje, co sprawia jej radość, co ją niepokoi</li><li><strong>Nie spieszysz się</strong> — napięcie buduje się w czasie, nie w pośpiechu. Powolność jest sexy.</li><li>Komplementujesz konkretnie: <em>"to co powiedziałaś przed chwilą"</em> działa mocniej niż <em>"ładna jesteś"</em></li><li>Dajesz jej czuć się jednocześnie <strong>bezpiecznie i pożądaną</strong> — to rzadka i silna kombinacja</li><li>Masz odwagę być wrażliwym — to nie słabość. To siła, której większość mężczyzn się boi.</li></ul><div class="quote-box" style="margin-top:14px"><em>"Najlepszy kochanek to ten, który sprawia że ona sama chce więcej — nie ten, który próbuje ją przekonać."</em></div>`}
 ];
 
 const LINES={
@@ -475,15 +527,35 @@ const LINES={
 };
 
 const QUOTES=[
-  {t:"Charyzma to nie talent — to mięsień, który da się ćwiczyć.",a:"wg Olivii Fox Cabane, 'The Charisma Myth'"},
-  {t:"Atrakcyjność rodzi się ze szczerości, nie z trików.",a:"wg Marka Mansona, 'Models'"},
-  {t:"Brak potrzebowania jest sexy. Desperacja nie.",a:"wg Marka Mansona, 'Models'"},
-  {t:"Jeśli myślisz, że możesz zrobić ruch — mogłeś już chwilę temu.",a:"wg Marka Mansona, 'Models'"},
-  {t:"Zainteresuj się szczerze drugą osobą, a zjednasz ją w dwa miesiące szybciej niż w dwa lata prób bycia interesującym.",a:"wg Dale'a Carnegie"},
-  {t:"Odwaga to nie brak strachu, tylko działanie mimo niego.",a:""},
-  {t:"Polaryzuj: bądź sobą, a przyciągniesz właściwych i odfiltrujesz resztę.",a:"wg Marka Mansona, 'Models'"},
-  {t:"Odrzucenie to filtr, nie porażka — oszczędza czas obojgu.",a:""},
-  {t:"Twoja obecność mówi głośniej niż każdy tekst.",a:"zasada z 'The Charisma Myth'"},
+  {t:"Stań się tym, kim jesteś.",a:"Nietzsche"},
+  {t:"Poznaj samego siebie.",a:"napis w Delfach"},
+  {t:"To, co stoi na drodze, staje się drogą.",a:"Marek Aureliusz"},
+  {t:"Bądź sobą — wszyscy inni są już zajęci.",a:"Oscar Wilde"},
+  {t:"Człowiek jest tym, w co wierzy.",a:"Czechow"},
+  {t:"Nie ma pomyślnego wiatru dla tego, kto nie wie, dokąd płynie.",a:"Seneka"},
+  {t:"Ten, kto ma po co żyć, zniesie niemal każde jak.",a:"Nietzsche"},
+  {t:"Podróż tysiąca mil zaczyna się od jednego kroku.",a:"Lao Tzu"},
+  {t:"Wolność to nie robienie, co się chce, lecz chcenie tego, co się robi.",a:""},
+  {t:"Najciemniej jest pod latarnią.",a:""},
+  {t:"Granice mojego języka są granicami mojego świata.",a:"Wittgenstein"},
+  {t:"Nie wchodzi się dwa razy do tej samej rzeki.",a:"Heraklit"},
+  {t:"Cisza też jest odpowiedzią.",a:""},
+  {t:"Stajemy się tym, co robimy wielokrotnie.",a:"wg Arystotelesa"},
+  {t:"Kto patrzy na zewnątrz — śni; kto patrzy w siebie — budzi się.",a:"Jung"},
+  {t:"Nie widzimy rzeczy takimi, jakie są — widzimy je takimi, jacy jesteśmy.",a:""},
+  {t:"Pragnienie to połowa posiadania.",a:""},
+  {t:"Odwaga to opanowanie strachu, nie jego brak.",a:"Mark Twain"},
+  {t:"Życie zaczyna się tam, gdzie kończy się strefa komfortu.",a:""},
+  {t:"Najtrudniejszy jest pierwszy krok — reszta to już ruch.",a:""},
+  {t:"Czas, który lubisz tracić, nie jest czasem straconym.",a:""},
+  {t:"Pytanie jest ważniejsze od odpowiedzi.",a:""},
+  {t:"To, czego szukasz, szuka ciebie.",a:"Rumi"},
+  {t:"Nie ma drogi do szczęścia — szczęście jest drogą.",a:""},
+  {t:"Charyzma to nie talent — to mięsień.",a:"wg Olivii Fox Cabane"},
+  {t:"Atrakcyjność rodzi się ze szczerości, nie z trików.",a:"wg Marka Mansona"},
+  {t:"Brak potrzebowania jest sexy. Desperacja nie.",a:"wg Marka Mansona"},
+  {t:"Polaryzuj: bądź sobą, a przyciągniesz właściwych.",a:"wg Marka Mansona"},
+  {t:"Odrzucenie to filtr, nie porażka.",a:""},
   {t:"Liczy się to, że podszedłeś. Wynik jest dodatkiem.",a:""}
 ];
 
@@ -497,48 +569,54 @@ const REFRAMES=[
 ];
 
 const LADDER=[
-  {
-    level:1,title:"Rozgrzewka wzrokowa",
-    task:"Uśmiechnij się i nawiąż kontakt wzrokowy z 3 obcymi osobami.",
-    why:"Oswajasz 'bycie widzianym' bez presji rozmowy.",
-    doneMsg:"Pierwszy krok zrobiony. Bycie widzianym nie zabija — właśnie to sprawdziłeś."
-  },
-  {
-    level:2,title:"Drobna uprzejmość",
-    task:"Powiedz szczery komplement 1 osobie (obsługa, ktoś z miasta) — o czymś co realnie zauważyłeś.",
-    why:"Ćwiczysz mówienie czegoś miłego na głos, bez celu 'zdobycia'.",
-    doneMsg:"Komplement bez agendy. To jest właśnie szczerość, której ludzie szukają."
-  },
-  {
-    level:3,title:"Pierwsze słowo",
-    task:"Zadaj obcej osobie 1 proste pytanie (godzina, kierunek, polecenie miejsca).",
-    why:"Przełamujesz barierę otwarcia ust do nieznajomego.",
-    doneMsg:"Usta się otworzyły. Świat się nie skończył. Faktycznie."
-  },
-  {
-    level:4,title:"Small talk",
-    task:"Przeciągnij jedną interakcję o 2 zdania dłużej (komentarz + pytanie).",
-    why:"Uczysz się, że rozmowa może płynąć dalej — a świat się nie kończy.",
-    doneMsg:"Rozmowa sama potrafiła żyć. To ważne odkrycie."
-  },
-  {
-    level:5,title:"Opener sytuacyjny",
-    task:"Zagadnij 1 osobę używając pretekstu z otoczenia (opinia o kawie/produkcie).",
-    why:"Pierwszy 'miękki' podryw z bezpieczną przykrywką.",
-    doneMsg:"Pretekst działa. To nie sztuczka — to otwieranie drzwi."
-  },
-  {
-    level:6,title:"Reset odrzucenia",
-    task:"Świadomie zaakceptuj 1 chłodną reakcję — odejdź z uśmiechem i 'miłego dnia'.",
-    why:"Udowadniasz sobie, że odrzucenie nie boli tak, jak głowa straszy. To filtr, nie porażka.",
-    doneMsg:"To wymagało więcej odwagi niż podejście. I właśnie to zrobiłeś."
-  },
-  {
-    level:7,title:"Direct",
-    task:"Podejdź do kogoś, kto ci się podoba, użyj openera direct i poproś o numer jeśli jest zielone światło.",
-    why:"Pełne podejście. Liczy się, że to zrobiłeś — wynik jest dodatkiem.",
-    doneMsg:"To jest szczyt drabinki. Niezależnie od wyniku — właśnie pokazałeś kim jesteś."
-  }
+  {level:1,title:"Rozgrzewka wzrokowa",task:"Uśmiechnij się i nawiąż kontakt wzrokowy z 3 obcymi osobami.",why:"Oswajasz 'bycie widzianym' bez presji rozmowy.",doneMsg:"Pierwszy krok zrobiony. Bycie widzianym nie zabija — właśnie to sprawdziłeś."},
+  {level:2,title:"Drobna uprzejmość",task:"Powiedz szczery komplement 1 osobie (obsługa, ktoś z miasta) — o czymś co realnie zauważyłeś.",why:"Ćwiczysz mówienie czegoś miłego na głos, bez celu 'zdobycia'.",doneMsg:"Komplement bez agendy. To jest właśnie szczerość, której ludzie szukają."},
+  {level:3,title:"Pierwsze słowo",task:"Zadaj obcej osobie 1 proste pytanie (godzina, kierunek, polecenie miejsca).",why:"Przełamujesz barierę otwarcia ust do nieznajomego.",doneMsg:"Usta się otworzyły. Świat się nie skończył. Faktycznie."},
+  {level:4,title:"Small talk",task:"Przeciągnij jedną interakcję o 2 zdania dłużej (komentarz + pytanie).",why:"Uczysz się, że rozmowa może płynąć dalej — a świat się nie kończy.",doneMsg:"Rozmowa sama potrafiła żyć. To ważne odkrycie."},
+  {level:5,title:"Opener sytuacyjny",task:"Zagadnij 1 osobę używając pretekstu z otoczenia (opinia o kawie/produkcie).",why:"Pierwszy 'miękki' podryw z bezpieczną przykrywką.",doneMsg:"Pretekst działa. To nie sztuczka — to otwieranie drzwi."},
+  {level:6,title:"Reset odrzucenia",task:"Świadomie zaakceptuj 1 chłodną reakcję — odejdź z uśmiechem i 'miłego dnia'.",why:"Udowadniasz sobie, że odrzucenie nie boli tak, jak głowa straszy. To filtr, nie porażka.",doneMsg:"To wymagało więcej odwagi niż podejście. I właśnie to zrobiłeś."},
+  {level:7,title:"Direct",task:"Podejdź do kogoś, kto ci się podoba, użyj openera direct i poproś o numer jeśli jest zielone światło.",why:"Pełne podejście. Liczy się, że to zrobiłeś — wynik jest dodatkiem.",doneMsg:"To jest szczyt drabinki. Niezależnie od wyniku — właśnie pokazałeś kim jesteś."}
+];
+
+const PANIC_A=[
+  "Hej, wiem że z zaskoczenia — ale pożałowałbym, gdybym nie zagadał. Jestem [imię].",
+  "Muszę to powiedzieć szybko, zanim stchórzę: masz świetną energię.",
+  "Okej, podszedłem bez planu. Liczę, że uratujesz tę rozmowę.",
+  "Przeszedłem specjalnie na drugą stronę, żeby się przywitać. Warto było?",
+  "Zatrzymałem się, bo gdybym poszedł dalej, myślałbym o tym cały dzień.",
+  "Wyglądasz na kogoś z dobrą historią. Zaryzykuję i zapytam.",
+  "Mam zero gładkich tekstów, więc po prostu: cześć, chciałem cię poznać.",
+  "Idę z czymś prostym — podobasz mi się i chciałem ci to powiedzieć osobiście.",
+  "Ratuj — ta kawiarnia czy tamta? I tak, to był pretekst, żeby zagadać.",
+  "Czuję, że jesteś tą, która sprawia ciekawe kłopoty. Musiałem sprawdzić.",
+  "Daj mi 20 sekund, zanim uznasz mnie za dziwnego — potem decydujesz.",
+  "Wiem, że jesteś zajęta, ale byłbym na siebie zły, gdybym nie zapytał o imię.",
+  "Nie podchodzę do ludzi na ulicy. Dziś robię wyjątek — przez ciebie.",
+  "Szczerze? Serce mi wali, ale wolę to niż żałować. Cześć."
+];
+
+const PANIC_B=[
+  "Spoko, nie chcę cię zatrzymywać. Miłego dnia — naprawdę.",
+  "Widzę, że się spieszysz — szanuję to. Trzymaj się!",
+  "Okej, czytam sygnały. Było mi miło, lecę. Powodzenia!",
+  "Nie ma sprawy, dzięki za chwilę. Udanego dnia.",
+  "Jasne, rozumiem. Cieszę się, że zagadałem. Pa!",
+  "Wszystko gra — nie każdy moment jest na rozmowę. Miłego!",
+  "Łapię. Zostawiam cię z twoim dniem, dzięki za uśmiech.",
+  "Spokojnie, bez ciśnienia. Było warto podejść. Trzymaj się!",
+  "Rozumiem w pełni. Miłej reszty dnia, serio.",
+  "Okej — szanuję twój czas. Cześć i powodzenia.",
+  "Nie chcę być natrętny, więc znikam z uśmiechem. Pa!",
+  "Dzięki za szczerość, doceniam. Miłego dnia!"
+];
+
+const UBIOR=[
+  {icon:"🔑",title:"Fundamenty (zawsze)",body:`<ul><li><strong>Dopasowanie (fit)</strong> ważniejsze niż marka — krój wszystko zmienia</li><li>Czyste, wyprasowane, bez plam</li><li>Buty czyste i zadbane — mówią wiele zanim zaczniesz mówić</li><li>Paleta neutralna: granat, biel, szarość, beż + <strong>max 1 element wyrazisty</strong></li><li>Higiena: świeży oddech, paznokcie, ogarnięty zarost</li><li>Zapach: 2 psiknięcia, nie 10 — dyskretny, nie ogłuszający</li></ul><div class="quote-box" style="margin-top:12px"><em>Ubiór ma podkreślać ciebie, nie krzyczeć za ciebie.</em></div>`},
+  {icon:"👟",title:"Casual / Z miasta",body:`<ul><li>Dobre jeansy lub chinosy (dobrze skrojone — kluczowe)</li><li>Czysta koszulka lub polo</li><li>Minimalistyczne sneakersy — zadbane</li></ul><p style="margin-top:10px;color:var(--muted2)">Prosto znaczy dobrze — byle czyste i dopasowane. Casual nie znaczy niedbały.</p>`},
+  {icon:"☕",title:"Randka na kawę (smart casual)",body:`<ul><li>Chinosy lub ciemne jeansy</li><li>Koszula lub ładny sweter</li><li>Czyste buty premium (nie codzienne trampki)</li></ul><p style="margin-top:10px;color:var(--muted2)">Jeden poziom wyżej niż casual. Pokazujesz że Ci zależy — bez przesady.</p>`},
+  {icon:"🌙",title:"Randka wieczorna",body:`<ul><li>Ciemne spodnie</li><li>Koszula — ewentualnie lekka marynarka</li><li>Skórzane buty</li><li>Stonowane, ciemne kolory — elegancja przez prostotę</li></ul><p style="margin-top:10px;color:var(--muted2)">Im bardziej wieczorowo, tym ważniejszy staje się każdy detal. Stan ubrania przed krojem.</p>`},
+  {icon:"🎉",title:"Impreza",body:`<ul><li>Jeden mocniejszy element (ciekawy krój, kolor, detal) na neutralnej bazie</li><li>Dobrze leżące warstwy</li><li>Unikaj przesadzenia — jeden akcent wystarczy</li></ul><p style="margin-top:10px;color:var(--muted2)">Impreza to przestrzeń na więcej odwagi — ale wciąż z głową.</p>`},
+  {icon:"💼",title:"Formalnie / Praca",body:`<ul><li>Dopasowany garnitur lub marynarka + spodnie</li><li>Koszula — najlepiej prasowana</li><li>Skórzane buty</li><li>Pasek w kolorze butów — często zapomniany detal, zawsze widoczny</li></ul><p style="margin-top:10px;color:var(--muted2)">Formalnie nie znaczy sztywno — klucz to dopasowanie i stan ubrania.</p>`}
 ];
 
 const SIM_SCENARIOS=[
@@ -591,10 +669,18 @@ const S={
   approaches:{count:0,lastDate:null,streak:0},
   ladderDone:[],ladderNotes:{},completedLadders:0,testSkipped:false,favs:[],
   load(){
-    const raw=localStorage.getItem('fct_v4');
+    const raw=localStorage.getItem('fct_v5');
     if(!raw){
-      const old=localStorage.getItem('fct_v3');
-      if(old){const d=JSON.parse(old);this.result=d.result||null;this.approaches=d.approaches||{count:0,lastDate:null,streak:0};}
+      const v4=localStorage.getItem('fct_v4');
+      if(v4){
+        const d=JSON.parse(v4);
+        this.result=d.result||null;
+        this.approaches=d.approaches||{count:0,lastDate:null,streak:0};
+        this.ladderDone=d.ladderDone||[];
+        this.ladderNotes=d.ladderNotes||{};
+        this.completedLadders=d.completedLadders||0;
+        this.testSkipped=d.testSkipped||false;
+      }
       return;
     }
     const d=JSON.parse(raw);
@@ -607,7 +693,7 @@ const S={
     this.favs=d.favs||[];
   },
   save(){
-    localStorage.setItem('fct_v4',JSON.stringify({
+    localStorage.setItem('fct_v5',JSON.stringify({
       result:this.result,approaches:this.approaches,
       ladderDone:this.ladderDone,ladderNotes:this.ladderNotes,
       completedLadders:this.completedLadders,testSkipped:this.testSkipped,favs:this.favs
@@ -618,11 +704,14 @@ const S={
 const App={
   _simIdx:0,
   _breath:{on:false,iv:null,to:null,cycle:0,phase:0},
+  _panicIdxA:0,
+  _panicIdxB:0,
 
   init(){
     S.load();
     this.buildSciaga();
     this.buildCats();
+    this.buildUbior();
     this.renderLine();
     this.renderQuote();
     this.renderRf();
@@ -632,9 +721,11 @@ const App={
     if(S.result){
       this.showResult(S.result,false);
       document.getElementById('nav').classList.add('visible');
+      document.getElementById('panic-fab').classList.add('visible');
       this.go('sciaga');
     } else if(S.testSkipped){
       document.getElementById('nav').classList.add('visible');
+      document.getElementById('panic-fab').classList.add('visible');
       this.go('sciaga');
     }
   },
@@ -654,6 +745,7 @@ const App={
   skipTest(){
     S.testSkipped=true;S.save();
     document.getElementById('nav').classList.add('visible');
+    document.getElementById('panic-fab').classList.add('visible');
     this.go('sciaga');
   },
 
@@ -741,6 +833,7 @@ const App={
       document.querySelectorAll('.dim-fill').forEach(el=>el.style.width=el.dataset.w+'%');
     },300);
     document.getElementById('nav').classList.add('visible');
+    document.getElementById('panic-fab').classList.add('visible');
     this.renderProfileBanner();
   },
 
@@ -841,7 +934,7 @@ const App={
       S.favs.map(i=>{const q=QUOTES[i];return`
         <div class="fav-item">
           <div class="fav-item-text">"${q.t}"</div>
-          <div class="fav-item-author">— ${q.a}</div>
+          ${q.a?`<div class="fav-item-author">— ${q.a}</div>`:''}
           <button class="fav-remove" onclick="App.removeFav(${i})">✕</button>
         </div>`;}).join('');
   },
@@ -938,7 +1031,6 @@ const App={
     const el=document.getElementById('ladder-content');
     if(!el)return;
     const done=S.ladderDone;
-    // All done → completion screen
     if(done.length>=LADDER.length){
       el.innerHTML=`
         <div class="ldr-complete">
@@ -950,7 +1042,6 @@ const App={
         </div>`;
       return;
     }
-    // Progress bar
     const pct=Math.round(done.length/LADDER.length*100);
     let html=`
       <div class="ldr-prog-wrap">
@@ -984,23 +1075,12 @@ const App={
   },
 
   toggleLevel(i){
-    if(S.ladderDone.includes(i))return; // jednokierunkowe
-    S.ladderDone.push(i);
-    S.save();
-    this.renderLadder();
+    if(S.ladderDone.includes(i))return;
+    S.ladderDone.push(i);S.save();this.renderLadder();
   },
-
-  saveNote(i,val){
-    S.ladderNotes[i]=val;
-    S.save();
-  },
-
+  saveNote(i,val){S.ladderNotes[i]=val;S.save();},
   resetLadder(){
-    S.completedLadders++;
-    S.ladderDone=[];
-    S.ladderNotes={};
-    S.save();
-    this.renderLadder();
+    S.completedLadders++;S.ladderDone=[];S.ladderNotes={};S.save();this.renderLadder();
   },
 
   // SIMULATOR
@@ -1015,7 +1095,7 @@ const App={
     const sc=SIM_SCENARIOS[this._simIdx],r=sc.responses[i];
     document.getElementById('sim-chat').innerHTML+=`<div class="sim-msg sim-her">${r.t}</div>`;
     let html=`<div class="sim-hint">${r.hint}</div>`;
-    if(r.icon==='✅'&&sc.followups){
+    if(r.icon==='✅'&&sc.followups&&sc.followups.length){
       html+=`<div class="sim-label">NASTĘPNY RUCH:</div>`+
         sc.followups.map((f,fi)=>`<button class="sim-choice" onclick="App.simFollow(${fi})">${f.p}</button>`).join('');
     }else{
@@ -1034,13 +1114,68 @@ const App={
     document.getElementById('sim-chat').scrollTop=9999;
   },
   nextSim(){
-    this._simIdx=(this._simIdx+1)%SIM_SCENARIOS.length;
-    this.renderSim();
+    this._simIdx=(this._simIdx+1)%SIM_SCENARIOS.length;this.renderSim();
+  },
+
+  // UBIOR
+  buildUbior(){
+    document.getElementById('ubior-cards').innerHTML=UBIOR.map((c,i)=>`
+      <div class="coll-card" id="uc${i}">
+        <div class="coll-hdr" onclick="App.toggleU(${i})">
+          <div class="coll-title"><span style="font-size:19px">${c.icon}</span>${c.title}</div>
+          <svg class="coll-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="coll-body"><div class="coll-inner">${c.body}</div></div>
+      </div>`).join('');
+  },
+  toggleU(i){document.getElementById('uc'+i).classList.toggle('open');},
+
+  // PANIC
+  openPanic(){
+    this._panicIdxA=Math.floor(Math.random()*PANIC_A.length);
+    this._panicIdxB=Math.floor(Math.random()*PANIC_B.length);
+    this._renderPanicTexts();
+    document.getElementById('panic-overlay').classList.add('open');
+  },
+  closePanic(){
+    document.getElementById('panic-overlay').classList.remove('open');
+  },
+  panicReroll(list){
+    if(list==='a'){
+      let n;do{n=Math.floor(Math.random()*PANIC_A.length);}while(n===this._panicIdxA&&PANIC_A.length>1);
+      this._panicIdxA=n;
+    }else{
+      let n;do{n=Math.floor(Math.random()*PANIC_B.length);}while(n===this._panicIdxB&&PANIC_B.length>1);
+      this._panicIdxB=n;
+    }
+    this._renderPanicTexts();
+  },
+  _renderPanicTexts(){
+    document.getElementById('panic-text-a').textContent='"'+PANIC_A[this._panicIdxA]+'"';
+    document.getElementById('panic-text-b').textContent='"'+PANIC_B[this._panicIdxB]+'"';
+  },
+  panicCopy(list,btn){
+    const txt=list==='a'?PANIC_A[this._panicIdxA]:PANIC_B[this._panicIdxB];
+    const orig=btn.textContent;
+    const doCopy=str=>{
+      if(navigator.clipboard){navigator.clipboard.writeText(str).catch(()=>this._fallbackCopy(str));}
+      else{this._fallbackCopy(str);}
+    };
+    doCopy(txt);
+    btn.textContent='✓ Skopiowano!';
+    setTimeout(()=>btn.textContent=orig,1600);
+  },
+  _fallbackCopy(txt){
+    const ta=document.createElement('textarea');
+    ta.value=txt;ta.style.cssText='position:fixed;opacity:0;top:0;left:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');}catch(e){}
+    document.body.removeChild(ta);
   },
 
   resetAll(){
     if(!confirm('Usunąć wszystkie dane? Wynik testu, licznik podejść i drabinka zostaną skasowane.'))return;
-    localStorage.removeItem('fct_v4');localStorage.removeItem('fct_v3');location.reload();
+    localStorage.removeItem('fct_v5');localStorage.removeItem('fct_v4');localStorage.removeItem('fct_v3');location.reload();
   }
 };
 
